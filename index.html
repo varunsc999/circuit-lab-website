@@ -1,2405 +1,805 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CIRCUIT LAB</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --navy: #0f2044;
-    --navy-mid: #1a3460;
-    --blue: #2255a4;
-    --blue-light: #3a74cc;
-    --blue-pale: #d6e4f7;
-    --blue-ghost: #eef4fc;
-    --white: #ffffff;
-    --grey-50: #f8f9fb;
-    --grey-100: #f0f2f6;
-    --grey-200: #e2e6ef;
-    --grey-300: #c8cfdc;
-    --grey-400: #9aa3b5;
-    --grey-600: #5a6478;
-    --grey-800: #2c3344;
-    --text: #1a2035;
-    --text-muted: #5a6478;
-    --border: #e2e6ef;
-    --radius: 8px;
-    --radius-lg: 14px;
-    --nav-h: 64px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Outfit', sans-serif;
-    background: var(--white);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ─── NOISE TEXTURE ─── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  /* ─── NAV ─── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: var(--nav-h);
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 48px;
-    z-index: 100;
-  }
-
-  .nav-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--navy);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .logo-icon svg { width: 22px; height: 22px; }
-
-  .logo-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--navy);
-    letter-spacing: 0.08em;
-  }
-
-  .logo-text span {
-    color: var(--blue-light);
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .nav-link {
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text-muted);
-    padding: 7px 16px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.18s ease;
-    letter-spacing: 0.02em;
-    border: 1px solid transparent;
-    position: relative;
-  }
-
-  .nav-link:hover { color: var(--navy); background: var(--grey-50); }
-
-  .nav-link.active {
-    color: var(--blue);
-    background: var(--blue-ghost);
-    border-color: var(--blue-pale);
-    font-weight: 500;
-  }
-
-  /* ─── PAGE SHELL ─── */
-  .page { display: none; padding-top: var(--nav-h); min-height: 100vh; }
-  .page.active { display: block; }
-
-  /* ─── HOME PAGE ─── */
-  .home-hero {
-    min-height: calc(100vh - var(--nav-h));
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 80px 48px 60px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* PCB grid background */
-  .home-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--grey-200) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grey-200) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.5;
-    z-index: 0;
-  }
-
-  /* Fade grid toward center */
-  .home-hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(255,255,255,0.85) 40%, transparent 100%);
-    z-index: 1;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 2;
-    max-width: 720px;
-  }
-
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--blue);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    padding: 6px 12px;
-    background: var(--blue-ghost);
-    border: 1px solid var(--blue-pale);
-    border-radius: 4px;
-  }
-
-  .hero-eyebrow::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: var(--blue-light);
-    border-radius: 50%;
-    animation: blink 2s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-
-  .hero-title {
-    font-family: 'Outfit', sans-serif;
-    font-size: clamp(42px, 6vw, 72px);
-    font-weight: 600;
-    color: var(--navy);
-    line-height: 1.05;
-    margin-bottom: 24px;
-    letter-spacing: -0.02em;
-  }
-
-  .hero-title em {
-    font-style: normal;
-    color: var(--blue-light);
-  }
-
-  .hero-subtitle {
-    font-size: 18px;
-    font-weight: 300;
-    color: var(--text-muted);
-    line-height: 1.7;
-    max-width: 540px;
-    margin-bottom: 40px;
-  }
-
-  .hero-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--navy);
-    color: white;
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 12px 24px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s ease;
-    letter-spacing: 0.02em;
-  }
-
-  .hero-cta:hover { background: var(--navy-mid); transform: translateY(-1px); }
-  .hero-cta svg { width: 16px; height: 16px; }
-
-  /* Floating chip decorations */
-  .hero-chips {
-    position: absolute;
-    right: 60px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    opacity: 0.7;
-  }
-
-  .chip-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--grey-600);
-    width: 180px;
-    box-shadow: 0 2px 12px rgba(15,32,68,0.06);
-  }
-
-  .chip-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .dot-green { background: #22c55e; }
-  .dot-blue { background: var(--blue-light); }
-  .dot-amber { background: #f59e0b; }
-
-  /* Stats strip */
-  .home-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 600px;
-    margin-top: 60px;
-    padding-top: 40px;
-    border-top: 1px solid var(--border);
-    position: relative;
-    z-index: 2;
-  }
-
-  .stat-item { padding-right: 40px; }
-  .stat-item + .stat-item { border-left: 1px solid var(--border); padding-left: 40px; padding-right: 40px; }
-
-  .stat-num {
-    font-family: 'Outfit', sans-serif;
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--navy);
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 300;
-  }
-
-  /* Feature cards below hero */
-  .home-features {
-    padding: 80px 48px;
-    background: var(--grey-50);
-    border-top: 1px solid var(--border);
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-
-  .feature-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    transition: border-color 0.2s;
-  }
-
-  .feature-card:hover { border-color: var(--blue-pale); }
-
-  .feature-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--blue-ghost);
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-
-  .feature-icon svg { width: 20px; height: 20px; stroke: var(--blue); }
-
-  .feature-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 8px;
-  }
-
-  .feature-desc {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.65;
-    font-weight: 300;
-  }
-
-  /* ─── PROJECTS PAGE ─── */
-  .projects-header {
-    padding: 56px 48px 32px;
-    border-bottom: 1px solid var(--border);
-    background: white;
-  }
-
-  .page-eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--blue);
-    margin-bottom: 12px;
-  }
-
-  .page-title {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--navy);
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
-  }
-
-  .page-subtitle {
-    font-size: 15px;
-    color: var(--text-muted);
-    font-weight: 300;
-    margin-bottom: 28px;
-  }
-
-  /* Search bar */
-  .search-wrap {
-    position: relative;
-    max-width: 480px;
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    stroke: var(--grey-400);
-    pointer-events: none;
-  }
-
-  .search-input {
-    width: 100%;
-    height: 42px;
-    padding: 0 16px 0 42px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px;
-    color: var(--text);
-    background: var(--grey-50);
-    outline: none;
-    transition: border-color 0.18s, background 0.18s;
-  }
-
-  .search-input:focus { border-color: var(--blue-light); background: white; }
-  .search-input::placeholder { color: var(--grey-400); }
-
-  /* Projects grid */
-  .projects-grid-wrap {
-    padding: 40px 48px 80px;
-    background: var(--grey-50);
-    min-height: calc(100vh - 200px);
-  }
-
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    max-width: 1100px;
-  }
-
-  .project-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.22s ease;
-    position: relative;
-  }
-
-  .project-card:hover {
-    border-color: var(--blue-pale);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(15,32,68,0.09);
-  }
-
-  .project-img {
-    width: 100%;
-    aspect-ratio: 16/10;
-    background: var(--grey-100);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* PCB-style placeholder art */
-  .project-img svg {
-    width: 80px;
-    height: 80px;
-    opacity: 0.18;
-  }
-
-  .project-img-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 60%, rgba(15,32,68,0.04) 100%);
-  }
-
-  .project-tag {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--blue);
-    background: rgba(255,255,255,0.92);
-    border: 1px solid var(--blue-pale);
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-
-  .project-body {
-    padding: 20px;
-  }
-
-  .project-date {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--grey-400);
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
-  }
-
-  .project-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-
-  .project-desc {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    font-weight: 300;
-  }
-
-  .project-arrow {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--blue-ghost);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .project-card:hover .project-arrow { opacity: 1; }
-  .project-arrow svg { width: 13px; height: 13px; stroke: var(--blue); }
-
-  .no-results {
-    display: none;
-    padding: 60px 0;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 15px;
-  }
-
-  /* ─── PROJECT DETAIL PAGE ─── */
-  #page-project {
-    background: var(--grey-50);
-  }
-
-  .project-detail-header {
-    background: white;
-    border-bottom: 1px solid var(--border);
-    padding: 48px 60px 40px;
-    position: relative;
-  }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    cursor: pointer;
-    margin-bottom: 28px;
-    padding: 6px 0;
-    border: none;
-    background: none;
-    transition: color 0.18s;
-  }
-
-  .back-btn:hover { color: var(--blue); }
-  .back-btn svg { width: 14px; height: 14px; stroke: currentColor; }
-
-  .detail-eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--blue);
-    margin-bottom: 12px;
-  }
-
-  .detail-title {
-    font-size: clamp(28px, 4vw, 42px);
-    font-weight: 600;
-    color: var(--navy);
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-    line-height: 1.15;
-  }
-
-  .detail-meta {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-  }
-
-  .meta-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-  }
-
-  .meta-tag svg { width: 13px; height: 13px; stroke: var(--grey-400); }
-
-  /* Sticky section nav */
-  .section-nav {
-    position: sticky;
-    top: var(--nav-h);
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 60px;
-    z-index: 50;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-  }
-
-  .section-nav-link {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 14px 20px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    transition: all 0.18s;
-  }
-
-  .section-nav-link:hover { color: var(--navy); }
-  .section-nav-link.active { color: var(--blue); border-bottom-color: var(--blue); }
-
-  /* Detail sections */
-  .detail-body {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 60px 60px 120px;
-  }
-
-  .detail-section {
-    margin-bottom: 72px;
-    scroll-margin-top: calc(var(--nav-h) + 50px);
-  }
-
-  .section-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-
-  .section-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--blue);
-    background: var(--blue-ghost);
-    border: 1px solid var(--blue-pale);
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.1em;
-  }
-
-  .section-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--navy);
-    letter-spacing: -0.01em;
-  }
-
-  .section-divider {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-    margin-left: 8px;
-  }
-
-  /* Overview */
-  .overview-text {
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.8;
-    font-weight: 300;
-  }
-
-  .overview-img-placeholder {
-    width: 100%;
-    aspect-ratio: 16/7;
-    background: var(--grey-100);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 28px 0;
-    color: var(--grey-400);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .overview-img-placeholder svg { width: 36px; height: 36px; opacity: 0.4; }
-
-  /* Parts list */
-  .parts-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-
-  .parts-table th {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 10px 16px;
-    text-align: left;
-    background: var(--grey-50);
-    border: 1px solid var(--border);
-  }
-
-  .parts-table td {
-    padding: 12px 16px;
-    border: 1px solid var(--border);
-    color: var(--text);
-    vertical-align: top;
-    font-size: 13px;
-  }
-
-  .parts-table tr:hover td { background: var(--grey-50); }
-
-  .parts-table .part-qty {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--blue);
-    font-weight: 500;
-  }
-
-  .part-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--blue-light);
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .part-link:hover { text-decoration: underline; }
-
-  /* Wiring diagram */
-  .wiring-placeholder {
-    width: 100%;
-    aspect-ratio: 16/9;
-    background: var(--navy);
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 14px;
-    color: rgba(255,255,255,0.3);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .wiring-placeholder::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(58,116,204,0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(58,116,204,0.15) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-
-  .wiring-placeholder svg { width: 40px; height: 40px; opacity: 0.3; z-index: 1; }
-  .wiring-placeholder span { z-index: 1; }
-
-  /* Steps */
-  .steps-list { display: flex; flex-direction: column; gap: 20px; }
-
-  .step-item {
-    display: flex;
-    gap: 20px;
-    padding: 24px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    transition: border-color 0.18s;
-  }
-
-  .step-item:hover { border-color: var(--blue-pale); }
-
-  .step-num-circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--blue-ghost);
-    border: 1px solid var(--blue-pale);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--blue);
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .step-content { flex: 1; }
-
-  .step-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 8px;
-  }
-
-  .step-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
-  /* Photo gallery */
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  .gallery-img {
-    aspect-ratio: 4/3;
-    background: var(--grey-100);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--grey-400);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    flex-direction: column;
-    gap: 8px;
-    transition: border-color 0.18s;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .gallery-img:first-child {
-    grid-column: span 2;
-    aspect-ratio: 16/7;
-  }
-
-  .gallery-img:hover { border-color: var(--blue-pale); }
-  .gallery-img svg { width: 28px; height: 28px; opacity: 0.3; }
-
-  /* Code snippets */
-  .code-block {
-    background: var(--grey-800);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
-
-  .code-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .code-lang {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: rgba(255,255,255,0.4);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .code-copy {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: rgba(255,255,255,0.35);
-    cursor: pointer;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: none;
-    border: none;
-    transition: color 0.18s;
-  }
-
-  .code-copy:hover { color: var(--blue-light); }
-
-  .code-pre {
-    padding: 20px 20px;
-    margin: 0;
-    font-family: 'DM Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.75;
-    color: #c8d3e8;
-    overflow-x: auto;
-    white-space: pre;
-  }
-
-  .code-kw { color: #81a1c1; }
-  .code-fn { color: #88c0d0; }
-  .code-str { color: #a3be8c; }
-  .code-num { color: #b48ead; }
-  .code-cmt { color: #616e88; font-style: italic; }
-  .code-type { color: #8fbcbb; }
-
-  /* Troubleshooting */
-  .trouble-list { display: flex; flex-direction: column; gap: 16px; }
-
-  .trouble-item {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: white;
-  }
-
-  .trouble-q {
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    gap: 16px;
-  }
-
-  .trouble-q:hover { background: var(--grey-50); }
-
-  .trouble-q-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--navy);
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .trouble-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    color: #856404;
-    padding: 2px 7px;
-    border-radius: 4px;
-    white-space: nowrap;
-    letter-spacing: 0.08em;
-    margin-top: 1px;
-    flex-shrink: 0;
-  }
-
-  .trouble-chevron {
-    width: 16px;
-    height: 16px;
-    stroke: var(--grey-400);
-    transition: transform 0.2s;
-    flex-shrink: 0;
-  }
-
-  .trouble-item.open .trouble-chevron { transform: rotate(180deg); }
-
-  .trouble-ans {
-    display: none;
-    padding: 0 20px 18px 40px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    font-weight: 300;
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-  }
-
-  .trouble-item.open .trouble-ans { display: block; }
-
-  /* ─── ABOUT PAGE ─── */
-  .about-wrap {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 72px 48px 100px;
-  }
-
-  .about-header {
-    display: flex;
-    align-items: center;
-    gap: 36px;
-    margin-bottom: 56px;
-    padding-bottom: 48px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .about-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: var(--grey-100);
-    border: 3px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .about-avatar svg { width: 44px; height: 44px; stroke: var(--grey-300); }
-
-  .about-name {
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--navy);
-    letter-spacing: -0.02em;
-    margin-bottom: 6px;
-  }
-
-  .about-tagline {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--blue);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .about-bio {
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.85;
-    font-weight: 300;
-    margin-bottom: 48px;
-  }
-
-  .about-bio p + p { margin-top: 18px; }
-
-  .about-skills-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-  }
-
-  .skills-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 48px;
-  }
-
-  .skill-chip {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    padding: 5px 12px;
-    border-radius: 4px;
-    letter-spacing: 0.06em;
-  }
-
-  .chip-tech { background: var(--blue-ghost); border: 1px solid var(--blue-pale); color: var(--blue); }
-  .chip-tool { background: var(--grey-100); border: 1px solid var(--border); color: var(--grey-600); }
-
-  .contact-section { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--border); }
-
-  .contact-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-  }
-
-  .contact-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  .contact-card {
-    background: var(--grey-50);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: border-color 0.18s;
-    cursor: pointer;
-    text-decoration: none;
-  }
-
-  .contact-card:hover { border-color: var(--blue-pale); background: white; }
-
-  .contact-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: var(--radius);
-    background: white;
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .contact-icon svg { width: 18px; height: 18px; stroke: var(--blue); }
-
-  .contact-label {
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 3px;
-  }
-
-  .contact-value {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--navy);
-  }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 900px) {
-    nav { padding: 0 24px; }
-    .home-hero { padding: 60px 24px 40px; }
-    .hero-chips { display: none; }
-    .features-grid { grid-template-columns: 1fr; }
-    .projects-header, .projects-grid-wrap { padding-left: 24px; padding-right: 24px; }
-    .projects-grid { grid-template-columns: repeat(2, 1fr); }
-    .detail-body { padding: 40px 24px 80px; }
-    .project-detail-header { padding: 36px 24px 28px; }
-    .section-nav { padding: 0 24px; }
-    .about-wrap { padding: 48px 24px 80px; }
-    .contact-grid { grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 600px) {
-    .projects-grid { grid-template-columns: 1fr; }
-    .gallery-grid { grid-template-columns: 1fr; }
-    .gallery-img:first-child { grid-column: span 1; }
-    .home-stats { grid-template-columns: 1fr; gap: 24px; }
-    .stat-item + .stat-item { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 24px; }
-    .about-header { flex-direction: column; text-align: center; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mindless_beats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --card: #141414;
+      --card-border: #242424;
+      --purple: #c084fc;
+      --purple-hover: #d8a5ff;
+      --cyan: #38bdf8;
+      --text-primary: #f0f0f0;
+      --text-muted: #555;
+      --text-dim: #2e2e2e;
+      --progress-track: #2a2a2a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Floating ambient notes in background ── */
+    .bg-deco {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-note {
+      position: absolute;
+      font-size: 18px;
+      color: var(--purple);
+      opacity: 0;
+      animation: floatUp var(--dur, 14s) ease-in infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.07; }
+      90%  { opacity: 0.05; }
+      100% { transform: translateY(-10vh) rotate(20deg); opacity: 0; }
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 4rem 2rem 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #1e1e1e;
+    }
+
+    .site-title {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+    .site-title .beats { color: var(--purple); }
+
+    .header-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .track-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── Seamless scrolling note ticker ── */
+    .ticker-wrap {
+      overflow: hidden;
+      width: 100%;
+      padding: 1.2rem 0;
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid #181818;
+    }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker 28s linear infinite;
+    }
+    /* Duplicate content for seamless loop */
+    .ticker-content {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      white-space: nowrap;
+      padding-right: 0;
+    }
+    .ticker-notes {
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 0.55em;
+      padding: 0 0.3em;
+    }
+    .ticker-wave {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin: 0 0.6em;
+      vertical-align: middle;
+    }
+    .ticker-wave span {
+      display: inline-block;
+      width: 2px;
+      border-radius: 99px;
+      background: var(--text-dim);
+      animation: wavepulse 1.5s ease-in-out infinite;
+    }
+    .ticker-wave span:nth-child(1) { height: 5px;  animation-delay: 0s; }
+    .ticker-wave span:nth-child(2) { height: 11px; animation-delay: 0.2s; }
+    .ticker-wave span:nth-child(3) { height: 7px;  animation-delay: 0.4s; }
+    .ticker-wave span:nth-child(4) { height: 14px; animation-delay: 0.6s; }
+    .ticker-wave span:nth-child(5) { height: 9px;  animation-delay: 0.8s; }
+    .ticker-wave span:nth-child(6) { height: 12px; animation-delay: 1.0s; }
+    .ticker-wave span:nth-child(7) { height: 5px;  animation-delay: 1.2s; }
+
+    @keyframes wavepulse {
+      0%, 100% { transform: scaleY(1); opacity: 0.3; }
+      50%       { transform: scaleY(1.7); opacity: 0.65; }
+    }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      max-width: 1400px;
+      margin: 2.5rem auto 1rem;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .section-label span {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #1e1e1e;
+    }
+
+    /* ── Grid ── */
+    .grid-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      position: relative;
+      z-index: 1;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ── */
+    .song-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.4rem 1.4rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .song-card:hover {
+      border-color: #333;
+      transform: translateY(-2px);
+    }
+    .song-card.playing {
+      border-color: #c084fc55;
+    }
+    .song-card.playing::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: radial-gradient(ellipse at 50% 110%, #c084fc0d 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* faint card note deco */
+    .card-deco-note {
+      position: absolute;
+      top: 8px; right: 12px;
+      font-size: 42px;
+      color: var(--purple);
+      opacity: 0.04;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .track-num {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .track-dur {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .song-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .song-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 2px;
+    }
+    .play-btn {
+      width: 40px; height: 40px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: none;
+      background: var(--purple);
+      color: #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .play-btn:hover { background: var(--purple-hover); }
+    .play-btn:active { transform: scale(0.94); }
+    .song-card.playing .play-btn { background: var(--cyan); }
+
+    .progress-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .progress-wrap {
+      position: relative;
+      height: 3px;
+      background: var(--progress-track);
+      border-radius: 99px;
+      cursor: pointer;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      width: 0%;
+      pointer-events: none;
+    }
+    .progress-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: #fff;
+      left: 0%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .progress-wrap:hover .progress-thumb { opacity: 1; }
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .time-display {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.03em;
+    }
+    .time-sep { font-size: 11px; color: var(--text-dim); }
+
+    audio { display: none; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-top: 1px solid #181818;
+      letter-spacing: 0.08em;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 540px) {
+      header { padding: 2.5rem 1.25rem 0; }
+      .grid-wrap { padding: 0 1.25rem 4rem; }
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .header-meta { text-align: left; }
+      .section-label { margin-top: 1.5rem; padding: 0 1.25rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ticker-track { animation: none; }
+      .ticker-wave span { animation: none; }
+      .bg-note { animation: none; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ─── NAVIGATION ─── -->
-<nav>
-  <div class="nav-logo" onclick="showPage('home')">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.2"/>
-        <rect x="7" y="7" width="10" height="10" rx="1" fill="white" fill-opacity="0.15" stroke="white" stroke-width="1"/>
-        <circle cx="9" cy="9" r="1" fill="#3a74cc"/>
-        <circle cx="15" cy="9" r="1" fill="#3a74cc"/>
-        <circle cx="9" cy="15" r="1" fill="#3a74cc"/>
-        <circle cx="15" cy="15" r="1" fill="#3a74cc"/>
-        <line x1="9" y1="4" x2="9" y2="2" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="15" y1="4" x2="15" y2="2" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="9" y1="22" x2="9" y2="20" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="15" y1="22" x2="15" y2="20" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="4" y1="9" x2="2" y2="9" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="4" y1="15" x2="2" y2="15" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="22" y1="9" x2="20" y2="9" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="22" y1="15" x2="20" y2="15" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <span class="logo-text">CIRCUIT<span>LAB</span></span>
-  </div>
-  <div class="nav-links">
-    <div class="nav-link active" id="nav-home" onclick="showPage('home')">Home</div>
-    <div class="nav-link" id="nav-projects" onclick="showPage('projects')">Projects</div>
-    <div class="nav-link" id="nav-about" onclick="showPage('about')">About Me</div>
-  </div>
-</nav>
-
-<!-- ═══════════════════════════════════════ -->
-<!--              HOME PAGE                 -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page active" id="page-home">
-  <section class="home-hero">
-    <div class="hero-content">
-      <div class="hero-eyebrow">Arduino &amp; Raspberry Pi Projects</div>
-      <h1 class="hero-title">Building things<br>that <em>actually work</em></h1>
-      <p class="hero-subtitle">A collection of microcontroller projects — from first prototype to finished build. Wiring diagrams, code, parts lists, and everything in between.</p>
-      <button class="hero-cta" onclick="showPage('projects')">
-        Browse Projects
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </button>
-
-      <div class="home-stats">
-        <div class="stat-item">
-          <div class="stat-num">9</div>
-          <div class="stat-label">Projects documented</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">2</div>
-          <div class="stat-label">Platforms (Arduino + RPi)</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-num">100%</div>
-          <div class="stat-label">Open source code</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Floating status chips -->
-    <div class="hero-chips">
-      <div class="chip-card">
-        <div class="chip-dot dot-green"></div>
-        <span>GPIO 4 — HIGH</span>
-      </div>
-      <div class="chip-card">
-        <div class="chip-dot dot-blue"></div>
-        <span>I2C 0x27 found</span>
-      </div>
-      <div class="chip-card">
-        <div class="chip-dot dot-amber"></div>
-        <span>Serial 9600 baud</span>
-      </div>
-      <div class="chip-card">
-        <div class="chip-dot dot-green"></div>
-        <span>Sketch uploaded</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="home-features">
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-          </svg>
-        </div>
-        <div class="feature-title">Step-by-step instructions</div>
-        <div class="feature-desc">Every project is broken down into clear, numbered steps so you can follow along and build it yourself.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-          </svg>
-        </div>
-        <div class="feature-title">Full wiring diagrams</div>
-        <div class="feature-desc">Schematic and breadboard diagrams for every build, so you know exactly what connects where.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-          </svg>
-        </div>
-        <div class="feature-title">Annotated source code</div>
-        <div class="feature-desc">All code is included with comments explaining what each section does and why.</div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-<!--            PROJECTS PAGE               -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-projects">
-  <div class="projects-header">
-    <div class="page-eyebrow">// projects</div>
-    <h1 class="page-title">All Projects</h1>
-    <p class="page-subtitle">Click any project to see the full build guide.</p>
-    <div class="search-wrap">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input class="search-input" type="text" placeholder="Search projects…" id="search-input" oninput="filterProjects(this.value)">
-    </div>
+  <!-- Floating background note decorations -->
+  <div class="bg-deco" aria-hidden="true">
+    <span class="bg-note" style="left:8%;  --dur:16s; --delay:0s">♩</span>
+    <span class="bg-note" style="left:20%; --dur:22s; --delay:3s">♪</span>
+    <span class="bg-note" style="left:35%; --dur:18s; --delay:7s">♫</span>
+    <span class="bg-note" style="left:50%; --dur:25s; --delay:1s">♬</span>
+    <span class="bg-note" style="left:63%; --dur:19s; --delay:9s">♩</span>
+    <span class="bg-note" style="left:77%; --dur:21s; --delay:4s">♪</span>
+    <span class="bg-note" style="left:90%; --dur:17s; --delay:12s">♫</span>
+    <span class="bg-note" style="left:42%; --dur:24s; --delay:6s">♬</span>
+    <span class="bg-note" style="left:72%; --dur:20s; --delay:15s">♩</span>
+    <span class="bg-note" style="left:15%; --dur:23s; --delay:11s">♫</span>
   </div>
 
-  <div class="projects-grid-wrap">
-    <div class="projects-grid" id="projects-grid"></div>
-    <div class="no-results" id="no-results">No projects match your search.</div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-<!--          PROJECT DETAIL PAGE           -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-project">
-  <div class="project-detail-header" id="detail-header">
-    <button class="back-btn" onclick="showPage('projects')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-      </svg>
-      Back to Projects
-    </button>
-    <div class="detail-eyebrow" id="detail-tag">// arduino</div>
-    <h1 class="detail-title" id="detail-title">Project Title</h1>
-    <div class="detail-meta">
-      <div class="meta-tag">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <span id="detail-date">Jan 2024</span>
+  <header>
+    <div class="header-inner">
+      <h1 class="site-title">mindless_<span class="beats">beats</span></h1>
+      <div class="header-meta">
+        <p class="track-count">10 tracks</p>
       </div>
-      <div class="meta-tag">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span id="detail-difficulty">Intermediate</span>
+    </div>
+  </header>
+
+  <!-- Seamless scrolling ticker -->
+  <div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker-track">
+      <!-- First copy -->
+      <div class="ticker-content">
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+      </div>
+      <!-- Exact duplicate for seamless loop -->
+      <div class="ticker-content">
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="ticker-notes">♩ ♪ ♫ ♬ ♩ ♪ ♫ ♬</span>
+        <span class="ticker-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
       </div>
     </div>
   </div>
 
-  <!-- Sticky section nav -->
-  <div class="section-nav" id="section-nav">
-    <div class="section-nav-link active" onclick="scrollToSection('s-overview')">Overview</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-parts')">Parts List</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-wiring')">Wiring</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-steps')">Instructions</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-gallery')">Photos</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-code')">Code</div>
-    <div class="section-nav-link" onclick="scrollToSection('s-trouble')">Troubleshooting</div>
+  <div class="section-label">
+    <span>tracks</span>
   </div>
 
-  <div class="detail-body">
+  <main class="grid-wrap">
+    <div class="grid" id="grid">
 
-    <!-- OVERVIEW -->
-    <div class="detail-section" id="s-overview">
-      <div class="section-label">
-        <span class="section-num">01</span>
-        <span class="section-title">Overview</span>
-        <div class="section-divider"></div>
-      </div>
-      <p class="overview-text" id="detail-overview"></p>
-      <div class="overview-img-placeholder">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21"/>
-        </svg>
-        Add your hero image here
-      </div>
-    </div>
-
-    <!-- PARTS LIST -->
-    <div class="detail-section" id="s-parts">
-      <div class="section-label">
-        <span class="section-num">02</span>
-        <span class="section-title">Parts List</span>
-        <div class="section-divider"></div>
-      </div>
-      <table class="parts-table" id="detail-parts">
-        <thead>
-          <tr>
-            <th style="width:50px">Qty</th>
-            <th>Component</th>
-            <th>Notes</th>
-            <th style="width:80px">Link</th>
-          </tr>
-        </thead>
-        <tbody id="parts-tbody"></tbody>
-      </table>
-    </div>
-
-    <!-- WIRING DIAGRAM -->
-    <div class="detail-section" id="s-wiring">
-      <div class="section-label">
-        <span class="section-num">03</span>
-        <span class="section-title">Wiring Diagram</span>
-        <div class="section-divider"></div>
-      </div>
-      <div class="wiring-placeholder">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-        </svg>
-        <span>Wiring diagram placeholder — replace with your Fritzing export or schematic image</span>
-      </div>
-    </div>
-
-    <!-- STEP-BY-STEP -->
-    <div class="detail-section" id="s-steps">
-      <div class="section-label">
-        <span class="section-num">04</span>
-        <span class="section-title">Step-by-Step Instructions</span>
-        <div class="section-divider"></div>
-      </div>
-      <div class="steps-list" id="detail-steps"></div>
-    </div>
-
-    <!-- GALLERY -->
-    <div class="detail-section" id="s-gallery">
-      <div class="section-label">
-        <span class="section-num">05</span>
-        <span class="section-title">Photos</span>
-        <div class="section-divider"></div>
-      </div>
-      <div class="gallery-grid">
-        <div class="gallery-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Hero photo — replace with your image
+      <!-- ─ CARD 1 ─ Change title, genre, and audio src ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♪</span>
+        <audio src="audio/sax-final.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 01</span>
+          <span class="track-dur">0:00</span>
         </div>
-        <div class="gallery-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Detail photo
+        <div>
+          <p class="song-title">sax</p>
+          <p class="song-sub">sample</p>
         </div>
-        <div class="gallery-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Detail photo
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 01">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- CODE -->
-    <div class="detail-section" id="s-code">
-      <div class="section-label">
-        <span class="section-num">06</span>
-        <span class="section-title">Code</span>
-        <div class="section-divider"></div>
+      <!-- ─ CARD 2 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♫</span>
+        <audio src="audio/song2.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 02</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 02">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="detail-code"></div>
-    </div>
 
-    <!-- TROUBLESHOOTING -->
-    <div class="detail-section" id="s-trouble">
-      <div class="section-label">
-        <span class="section-num">07</span>
-        <span class="section-title">Troubleshooting</span>
-        <div class="section-divider"></div>
+      <!-- ─ CARD 3 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♬</span>
+        <audio src="audio/song3.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 03</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 03">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="trouble-list" id="detail-trouble"></div>
-    </div>
 
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-<!--             ABOUT PAGE                 -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-about">
-  <div class="about-wrap">
-    <div class="about-header">
-      <div class="about-avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
+      <!-- ─ CARD 4 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♩</span>
+        <audio src="audio/song4.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 04</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 04">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <div class="about-name">Your Name</div>
-        <div class="about-tagline">// maker · builder · tinkerer</div>
+
+      <!-- ─ CARD 5 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♪</span>
+        <audio src="audio/song5.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 05</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 05">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="about-bio">
-      <p>Hi! I'm a hobbyist maker with a passion for building things at the intersection of hardware and software. I've been tinkering with microcontrollers since [year], and this site is my way of documenting what I build and sharing it with others who want to do the same.</p>
-      <p>Most of my projects are built around Arduino and Raspberry Pi. I love the challenge of making hardware do something useful — whether that's automating something in my home, building a sensor network, or just making something that blinks in an interesting way.</p>
-      <p>Feel free to reach out if you have questions about any of the projects, spot a bug in my code, or just want to chat about electronics.</p>
-    </div>
-
-    <div class="about-skills-title">// Tech I Work With</div>
-    <div class="skills-chips">
-      <span class="skill-chip chip-tech">Arduino Uno / Nano</span>
-      <span class="skill-chip chip-tech">Raspberry Pi 3 / 4</span>
-      <span class="skill-chip chip-tech">C / C++</span>
-      <span class="skill-chip chip-tech">Python</span>
-      <span class="skill-chip chip-tech">I2C / SPI / UART</span>
-      <span class="skill-chip chip-tech">MQTT</span>
-      <span class="skill-chip chip-tool">KiCad</span>
-      <span class="skill-chip chip-tool">Fritzing</span>
-      <span class="skill-chip chip-tool">VS Code</span>
-      <span class="skill-chip chip-tool">GitHub</span>
-      <span class="skill-chip chip-tool">Oscilloscope</span>
-    </div>
-
-    <div class="contact-section">
-      <div class="contact-title">// Get in touch</div>
-      <div class="contact-grid">
-        <a class="contact-card" href="mailto:you@example.com">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
+      <!-- ─ CARD 6 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♫</span>
+        <audio src="audio/song6.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 06</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 06">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
           </div>
-          <div>
-            <div class="contact-label">Email</div>
-            <div class="contact-value">you@example.com</div>
-          </div>
-        </a>
-        <a class="contact-card" href="https://github.com/yourusername" target="_blank">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/>
-            </svg>
-          </div>
-          <div>
-            <div class="contact-label">GitHub</div>
-            <div class="contact-value">github.com/yourusername</div>
-          </div>
-        </a>
-        <a class="contact-card" href="https://youtube.com/@yourchannel" target="_blank">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/>
-              <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
-            </svg>
-          </div>
-          <div>
-            <div class="contact-label">YouTube</div>
-            <div class="contact-value">@yourchannel</div>
-          </div>
-        </a>
-        <a class="contact-card" href="https://reddit.com/user/yourhandle" target="_blank">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M14.5 8.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5S12.17 7 13 7s1.5.67 1.5 1.5z"/>
-              <path d="M8.5 14c.5 1 2 2 3.5 2s3-.83 3.5-2"/>
-              <circle cx="9" cy="13" r="1"/>
-              <circle cx="15" cy="13" r="1"/>
-            </svg>
-          </div>
-          <div>
-            <div class="contact-label">Reddit</div>
-            <div class="contact-value">u/yourhandle</div>
-          </div>
-        </a>
+        </div>
       </div>
+
+      <!-- ─ CARD 7 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♬</span>
+        <audio src="audio/song7.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 07</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 07">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ CARD 8 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♩</span>
+        <audio src="audio/song8.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 08</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 08">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ CARD 9 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♪</span>
+        <audio src="audio/song9.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 09</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 09">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ CARD 10 ─ -->
+      <div class="song-card">
+        <span class="card-deco-note" aria-hidden="true">♫</span>
+        <audio src="audio/song10.mp3"></audio>
+        <div class="top-row">
+          <span class="track-num">Track 10</span>
+          <span class="track-dur">0:00</span>
+        </div>
+        <div>
+          <p class="song-title">Song Title Here</p>
+          <p class="song-sub">Genre / Mood</p>
+        </div>
+        <div class="controls-row">
+          <button class="play-btn" aria-label="Play Track 10">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+          </button>
+          <div class="progress-col">
+            <div class="progress-wrap">
+              <div class="progress-fill"></div>
+              <div class="progress-thumb"></div>
+            </div>
+            <div class="time-row">
+              <span class="time-display cur">0:00</span>
+              <span class="time-sep">/</span>
+              <span class="time-display tot">0:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-  </div>
-</div>
+  </main>
 
-<script>
-// ─── PROJECT DATA ───────────────────────────────────────────────────────────
-const PROJECTS = [
-  {
-    id: 1,
-    name: "Smart Plant Watering System",
-    date: "Mar 2024",
-    tag: "Arduino",
-    difficulty: "Beginner",
-    description: "Automated soil moisture monitoring with a servo-controlled water valve and LCD readout.",
-    overview: "This project uses a capacitive soil moisture sensor to monitor plant hydration levels and automatically triggers a servo-controlled valve to water the plant when the soil gets too dry. An LCD display shows real-time moisture percentage and the last watered timestamp. The whole system runs on an Arduino Uno and can be powered from a USB power bank, making it perfect for vacations or just forgetful plant owners.\n\nI built this after killing my third succulent in a year. The moisture sensor samples every 10 minutes, and the threshold is adjustable via a potentiometer on the side of the enclosure.",
-    parts: [
-      { qty: 1, name: "Arduino Uno R3", notes: "Or any 5V Arduino", link: true },
-      { qty: 1, name: "Capacitive Soil Moisture Sensor v1.2", notes: "Avoid resistive sensors — they corrode", link: true },
-      { qty: 1, name: "SG90 Micro Servo", notes: "Controls the water valve", link: true },
-      { qty: 1, name: "16×2 LCD Display (I2C)", notes: "I2C address 0x27", link: true },
-      { qty: 1, name: "Mini water pump + tubing", notes: "5V submersible pump", link: true },
-      { qty: 1, name: "10kΩ potentiometer", notes: "For threshold adjustment", link: false },
-      { qty: 1, name: "Breadboard + jumper wires", notes: "", link: false },
-      { qty: 1, name: "5V 2A USB power supply", notes: "", link: false },
-    ],
-    steps: [
-      { title: "Set up the moisture sensor", text: "Connect the VCC pin to the Arduino's 5V rail and GND to ground. Wire the AOUT (analog out) pin to A0 on the Arduino. The sensor reads a voltage between 0V (fully submerged) and 3.3V (completely dry in air)." },
-      { title: "Wire the LCD over I2C", text: "Connect SDA to Arduino pin A4 and SCL to A5. Power the module from 5V. Install the LiquidCrystal_I2C library from the Arduino Library Manager and run an I2C scanner sketch to confirm the display address (usually 0x27 or 0x3F)." },
-      { title: "Attach the servo", text: "The servo signal wire goes to Arduino pin 9 (PWM). Power the servo from the 5V rail — if your setup draws more than 500mA total, use a separate power supply for the servo to avoid a brownout." },
-      { title: "Connect the water pump", text: "Wire a TIP120 transistor as a switch between the Arduino and pump motor. Connect the base to digital pin 7 through a 1kΩ resistor, the collector to the pump negative lead, and the emitter to ground. Add a flyback diode across the motor terminals." },
-      { title: "Upload the sketch", text: "Open the Arduino IDE, paste in the project code, and adjust the DRY_THRESHOLD and WET_THRESHOLD constants to match your sensor's calibration values (explained in the code comments). Upload and open the Serial Monitor at 9600 baud to watch readings in real time." },
-      { title: "Calibrate and test", text: "With the sensor in dry air, note the analog reading (typically 520–580). Then dip it in a glass of water and note that reading (typically 200–250). Set those values as your calibration constants in the sketch. Test the pump by temporarily lowering the dry threshold." },
-    ],
-    code: `<span class="code-cmt">// Smart Plant Watering System</span>
-<span class="code-cmt">// Reads soil moisture, drives pump when dry</span>
+  <footer>♩ &nbsp; mindless_beats &nbsp; ♩</footer>
 
-<span class="code-kw">#include</span> <span class="code-str">&lt;LiquidCrystal_I2C.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;Servo.h&gt;</span>
+  <script>
+    const PLAY_ICON  = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>`;
+    const PAUSE_ICON = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2h3v10H3V2zm5 0h3v10H8V2z"/></svg>`;
 
-<span class="code-kw">const int</span> MOISTURE_PIN  = A0;
-<span class="code-kw">const int</span> PUMP_PIN      = <span class="code-num">7</span>;
-<span class="code-kw">const int</span> SERVO_PIN     = <span class="code-num">9</span>;
+    let currentAudio = null;
+    let currentCard  = null;
 
-<span class="code-kw">const int</span> DRY_THRESHOLD = <span class="code-num">550</span>;  <span class="code-cmt">// above = dry</span>
-<span class="code-kw">const int</span> WET_THRESHOLD = <span class="code-num">250</span>;  <span class="code-cmt">// below = wet</span>
-
-LiquidCrystal_I2C lcd(<span class="code-num">0x27</span>, <span class="code-num">16</span>, <span class="code-num">2</span>);
-Servo valve;
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  Serial.<span class="code-fn">begin</span>(<span class="code-num">9600</span>);
-  lcd.<span class="code-fn">init</span>();
-  lcd.<span class="code-fn">backlight</span>();
-  valve.<span class="code-fn">attach</span>(SERVO_PIN);
-  <span class="code-fn">pinMode</span>(PUMP_PIN, OUTPUT);
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">int</span> raw      = <span class="code-fn">analogRead</span>(MOISTURE_PIN);
-  <span class="code-kw">int</span> moisture = <span class="code-fn">map</span>(raw, DRY_THRESHOLD, WET_THRESHOLD, <span class="code-num">0</span>, <span class="code-num">100</span>);
-  moisture     = <span class="code-fn">constrain</span>(moisture, <span class="code-num">0</span>, <span class="code-num">100</span>);
-
-  lcd.<span class="code-fn">setCursor</span>(<span class="code-num">0</span>, <span class="code-num">0</span>);
-  lcd.<span class="code-fn">print</span>(<span class="code-str">"Moisture: "</span>);
-  lcd.<span class="code-fn">print</span>(moisture);
-  lcd.<span class="code-fn">print</span>(<span class="code-str">"%  "</span>);
-
-  <span class="code-kw">if</span> (moisture &lt; <span class="code-num">30</span>) {
-    <span class="code-fn">water</span>(<span class="code-num">3000</span>);  <span class="code-cmt">// run pump for 3 seconds</span>
-  }
-
-  <span class="code-fn">delay</span>(<span class="code-num">10000</span>);  <span class="code-cmt">// check every 10 seconds</span>
-}
-
-<span class="code-type">void</span> <span class="code-fn">water</span>(<span class="code-kw">int</span> duration) {
-  valve.<span class="code-fn">write</span>(<span class="code-num">90</span>);              <span class="code-cmt">// open valve</span>
-  <span class="code-fn">digitalWrite</span>(PUMP_PIN, HIGH);  <span class="code-cmt">// start pump</span>
-  <span class="code-fn">delay</span>(duration);
-  <span class="code-fn">digitalWrite</span>(PUMP_PIN, LOW);   <span class="code-cmt">// stop pump</span>
-  valve.<span class="code-fn">write</span>(<span class="code-num">0</span>);               <span class="code-cmt">// close valve</span>
-
-  lcd.<span class="code-fn">setCursor</span>(<span class="code-num">0</span>, <span class="code-num">1</span>);
-  lcd.<span class="code-fn">print</span>(<span class="code-str">"Watered!        "</span>);
-}`,
-    trouble: [
-      { q: "Sensor reads 0% even when bone dry", badge: "Common", a: "Check that the sensor VCC is connected to 5V (not 3.3V). Also verify the analog wire is on A0. If the reading is stuck near 0, the sensor module may be drawing too much current — try powering it from a digital pin set HIGH and only activating it during readings." },
-      { q: "LCD shows garbage characters or nothing", badge: "Common", a: "Run an I2C scanner sketch and check what address the display responds at. Most are 0x27 or 0x3F. Update the LiquidCrystal_I2C constructor call accordingly. Also try adjusting the contrast potentiometer on the back of the I2C module." },
-      { q: "Pump runs but no water comes out", badge: "Tip", a: "Check that the pump is fully submerged — many small pumps are not self-priming. Also verify the tubing has no kinks and the outlet is lower than the water reservoir to allow siphoning once primed." },
-    ]
-  },
-  {
-    id: 2,
-    name: "Temperature & Humidity Dashboard",
-    date: "Jan 2024",
-    tag: "Raspberry Pi",
-    difficulty: "Beginner",
-    description: "DHT22 sensor feeding data to a local Flask web server with live-updating charts.",
-    overview: "A Raspberry Pi reads a DHT22 temperature and humidity sensor every 30 seconds and logs the data to a SQLite database. A Flask web app serves a live dashboard — accessible from any browser on the local network — that charts the last 24 hours of readings using Chart.js.\n\nThis is a great first Raspberry Pi project because it touches GPIO, Python, a lightweight web server, and databases without being overwhelming. I've been running mine in my workshop for months and use the humidity data to decide when to run a dehumidifier.",
-    parts: [
-      { qty: 1, name: "Raspberry Pi 3B+ or 4", notes: "Any model with GPIO will work", link: true },
-      { qty: 1, name: "DHT22 sensor", notes: "More accurate than DHT11", link: true },
-      { qty: 1, name: "10kΩ pull-up resistor", notes: "Between DATA and VCC", link: false },
-      { qty: 1, name: "Breadboard + jumper wires", notes: "", link: false },
-      { qty: 1, name: "MicroSD card 16GB+", notes: "Class 10 or faster", link: false },
-    ],
-    steps: [
-      { title: "Flash Raspberry Pi OS", text: "Download Raspberry Pi Imager and flash Raspberry Pi OS Lite (no desktop needed). Enable SSH and set your Wi-Fi credentials in the Imager settings before writing so you can connect headless." },
-      { title: "Wire the DHT22", text: "Connect DHT22 pin 1 (VCC) to 3.3V on the Pi's GPIO header (pin 1). Pin 2 (DATA) goes to GPIO4 (pin 7) through a 10kΩ resistor to 3.3V. Pin 4 (GND) goes to any ground pin." },
-      { title: "Install dependencies", text: "SSH into the Pi and run: sudo apt update && sudo apt install python3-pip -y, then pip3 install adafruit-circuitpython-dht flask. Also run sudo apt install libgpiod2 for the GPIO backend." },
-      { title: "Set up the database", text: "The Python script auto-creates a SQLite database (sensor_data.db) on first run. If you want to inspect the data manually, install DB Browser for SQLite on your laptop and pull the file over SCP." },
-      { title: "Run as a system service", text: "Copy the app.py and sensor.py files to /home/pi/dashboard/, then create a systemd service unit file so the dashboard starts automatically on boot and restarts if it crashes." },
-    ],
-    code: `<span class="code-cmt"># sensor.py — reads DHT22 and logs to SQLite</span>
-
-<span class="code-kw">import</span> board
-<span class="code-kw">import</span> adafruit_dht
-<span class="code-kw">import</span> sqlite3
-<span class="code-kw">import</span> time
-<span class="code-kw">from</span> datetime <span class="code-kw">import</span> datetime
-
-DB_PATH  = <span class="code-str">"/home/pi/dashboard/sensor_data.db"</span>
-INTERVAL = <span class="code-num">30</span>  <span class="code-cmt"># seconds between readings</span>
-
-dht = adafruit_dht.<span class="code-fn">DHT22</span>(board.D4)
-
-<span class="code-kw">def</span> <span class="code-fn">init_db</span>():
-    conn = sqlite3.<span class="code-fn">connect</span>(DB_PATH)
-    conn.execute(<span class="code-str">"""
-        CREATE TABLE IF NOT EXISTS readings (
-            id        INTEGER PRIMARY KEY,
-            timestamp TEXT NOT NULL,
-            temp_c    REAL,
-            humidity  REAL
-        )
-    """</span>)
-    conn.<span class="code-fn">commit</span>()
-    conn.<span class="code-fn">close</span>()
-
-<span class="code-kw">def</span> <span class="code-fn">log_reading</span>(temp, humidity):
-    conn = sqlite3.<span class="code-fn">connect</span>(DB_PATH)
-    conn.<span class="code-fn">execute</span>(
-        <span class="code-str">"INSERT INTO readings (timestamp, temp_c, humidity) VALUES (?,?,?)"</span>,
-        (datetime.now().<span class="code-fn">isoformat</span>(), temp, humidity)
-    )
-    conn.<span class="code-fn">commit</span>()
-    conn.<span class="code-fn">close</span>()
-
-<span class="code-fn">init_db</span>()
-
-<span class="code-kw">while True</span>:
-    <span class="code-kw">try</span>:
-        temp     = dht.temperature
-        humidity = dht.humidity
-        <span class="code-fn">log_reading</span>(temp, humidity)
-        <span class="code-fn">print</span>(<span class="code-str">f"Temp: {temp:.1f}°C  Humidity: {humidity:.1f}%"</span>)
-    <span class="code-kw">except</span> RuntimeError <span class="code-kw">as</span> e:
-        <span class="code-fn">print</span>(<span class="code-str">f"Sensor error: {e}"</span>)
-    time.<span class="code-fn">sleep</span>(INTERVAL)`,
-    trouble: [
-      { q: "RuntimeError: Checksum did not validate", badge: "Common", a: "DHT22 sensors occasionally fail a read — this is normal. The code already handles it with a try/except. If you're getting it on every single read, check your pull-up resistor is 10kΩ and wired between DATA and 3.3V (not 5V)." },
-      { q: "Can't reach the dashboard on the network", badge: "Tip", a: "Make sure Flask is bound to 0.0.0.0 (not 127.0.0.1) in your app.py run call: app.run(host='0.0.0.0', port=5000). Find the Pi's IP address by running hostname -I in the terminal." },
-    ]
-  },
-  {
-    id: 3,
-    name: "RFID Door Lock",
-    date: "Nov 2023",
-    tag: "Arduino",
-    difficulty: "Intermediate",
-    description: "RC522 RFID reader paired with a 12V solenoid lock and whitelisted card storage in EEPROM.",
-    overview: "This project uses an MFRC522 RFID reader module and an Arduino Nano to control a 12V solenoid door lock. Authorized card UIDs are stored in the Arduino's EEPROM so they survive power cycles. A green LED and buzzer confirm access; a red LED and different buzzer tone deny it. Adding or removing cards is done by presenting an admin card first, then the card to enroll — no laptop needed.\n\nI installed this on my workshop door. Total build cost was under $20 and it's been reliable for over a year.",
-    parts: [
-      { qty: 1, name: "Arduino Nano", notes: "Or Uno with shield adapter", link: true },
-      { qty: 1, name: "MFRC522 RFID module + cards", notes: "Runs on SPI at 3.3V", link: true },
-      { qty: 1, name: "12V Solenoid lock", notes: "Fail-secure type", link: true },
-      { qty: 1, name: "IRF520 MOSFET or relay module", notes: "To switch 12V from 5V logic", link: true },
-      { qty: 2, name: "LEDs (red + green)", notes: "", link: false },
-      { qty: 1, name: "Passive buzzer", notes: "", link: false },
-      { qty: 1, name: "12V DC power supply", notes: "1A minimum", link: false },
-    ],
-    steps: [
-      { title: "Wire the MFRC522 over SPI", text: "The RC522 runs at 3.3V — do not connect it to 5V. RST → D9, SDA(SS) → D10, MOSI → D11, MISO → D12, SCK → D13. VCC → 3.3V, GND → GND. Use the MFRC522 library from the Arduino Library Manager." },
-      { title: "Set up the solenoid switching circuit", text: "Wire an IRF520 MOSFET: gate to Arduino pin D6 through a 1kΩ resistor, source to GND, drain to solenoid negative. Connect solenoid positive to your 12V supply. Add a flyback diode (1N4007) across the solenoid to suppress inductive kickback." },
-      { title: "Wire LEDs and buzzer", text: "Connect the green LED cathode to GND through a 220Ω resistor and anode to pin D4. Red LED to D5. Buzzer positive to D3 (PWM pin so you can use tone()). All share a common GND." },
-      { title: "Upload the base sketch", text: "Upload the sketch with an empty whitelist. Open Serial Monitor at 9600 baud and scan a card — it will print the UID as a hex string. Note the UID of the card you want to designate as your admin card and paste it into the ADMIN_UID constant in the code." },
-      { title: "Enroll access cards", text: "Restart the Arduino. Scan the admin card — the blue LED will flash. Within 10 seconds, scan the card you want to enroll. The system plays a confirm tone and saves the UID to EEPROM. Repeat for each card. To remove a card, scan admin, then scan the enrolled card again (it toggles)." },
-    ],
-    code: `<span class="code-cmt">// RFID Door Lock — MFRC522 + EEPROM whitelist</span>
-
-<span class="code-kw">#include</span> <span class="code-str">&lt;SPI.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;MFRC522.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;EEPROM.h&gt;</span>
-
-<span class="code-kw">const int</span>  RST_PIN    = <span class="code-num">9</span>;
-<span class="code-kw">const int</span>  SS_PIN     = <span class="code-num">10</span>;
-<span class="code-kw">const int</span>  LOCK_PIN   = <span class="code-num">6</span>;
-<span class="code-kw">const int</span>  LED_GREEN  = <span class="code-num">4</span>;
-<span class="code-kw">const int</span>  LED_RED    = <span class="code-num">5</span>;
-<span class="code-kw">const int</span>  BUZZER_PIN = <span class="code-num">3</span>;
-
-<span class="code-kw">const</span> <span class="code-type">String</span> ADMIN_UID = <span class="code-str">"AB CD EF 01"</span>;  <span class="code-cmt">// change this</span>
-<span class="code-kw">const int</span>  MAX_CARDS  = <span class="code-num">10</span>;
-<span class="code-kw">const int</span>  UID_LEN    = <span class="code-num">12</span>;  <span class="code-cmt">// 4 bytes → "XX XX XX XX" = 11 chars + null</span>
-
-MFRC522 rfid(SS_PIN, RST_PIN);
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  Serial.<span class="code-fn">begin</span>(<span class="code-num">9600</span>);
-  SPI.<span class="code-fn">begin</span>();
-  rfid.<span class="code-fn">PCD_Init</span>();
-  <span class="code-fn">pinMode</span>(LOCK_PIN,  OUTPUT);
-  <span class="code-fn">pinMode</span>(LED_GREEN, OUTPUT);
-  <span class="code-fn">pinMode</span>(LED_RED,   OUTPUT);
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">if</span> (!rfid.<span class="code-fn">PICC_IsNewCardPresent</span>()) <span class="code-kw">return</span>;
-  <span class="code-kw">if</span> (!rfid.<span class="code-fn">PICC_ReadCardSerial</span>())  <span class="code-kw">return</span>;
-
-  <span class="code-type">String</span> uid = <span class="code-fn">getUID</span>();
-  Serial.<span class="code-fn">println</span>(<span class="code-str">"Card: "</span> + uid);
-
-  <span class="code-kw">if</span> (uid == ADMIN_UID) {
-    <span class="code-fn">enrollMode</span>();
-  } <span class="code-kw">else if</span> (<span class="code-fn">isAuthorized</span>(uid)) {
-    <span class="code-fn">grantAccess</span>();
-  } <span class="code-kw">else</span> {
-    <span class="code-fn">denyAccess</span>();
-  }
-
-  rfid.<span class="code-fn">PICC_HaltA</span>();
-}
-
-<span class="code-type">String</span> <span class="code-fn">getUID</span>() {
-  <span class="code-type">String</span> uid = <span class="code-str">""</span>;
-  <span class="code-kw">for</span> (<span class="code-kw">byte</span> i = <span class="code-num">0</span>; i &lt; rfid.uid.size; i++) {
-    <span class="code-kw">if</span> (rfid.uid.uidByte[i] &lt; <span class="code-num">0x10</span>) uid += <span class="code-str">"0"</span>;
-    uid += <span class="code-type">String</span>(rfid.uid.uidByte[i], HEX);
-    <span class="code-kw">if</span> (i &lt; rfid.uid.size - <span class="code-num">1</span>) uid += <span class="code-str">" "</span>;
-  }
-  uid.<span class="code-fn">toUpperCase</span>();
-  <span class="code-kw">return</span> uid;
-}`,
-    trouble: [
-      { q: "RC522 not detected (SPI communication fails)", badge: "Common", a: "Double-check that VCC is 3.3V — the RC522 is not 5V tolerant on its VCC pin. Some clones also need a short delay after SPI.begin() before PCD_Init() works. Try adding a 50ms delay between them." },
-      { q: "EEPROM data lost after power cycle", badge: "Bug", a: "Make sure you're writing to EEPROM correctly — EEPROM.put() writes arbitrary types, EEPROM.write() only writes single bytes. Also confirm your EEPROM address offsets don't overlap. Each UID slot needs UID_LEN bytes of space." },
-    ]
-  },
-  {
-    id: 4,
-    name: "Weather Station with E-Ink Display",
-    date: "Sep 2023",
-    tag: "Raspberry Pi",
-    difficulty: "Intermediate",
-    description: "BME280 sensor data displayed on a Waveshare 2.9\" e-ink screen with daily min/max logging.",
-    overview: "A Raspberry Pi Zero W polls a BME280 sensor for temperature, humidity, and barometric pressure, then renders that data onto a Waveshare 2.9\" e-ink display. Because e-ink only draws power when refreshing, this runs on a USB power bank for days. A cron job refreshes the display every 5 minutes and logs data to CSV for graphing.\n\nThe low-power angle was the main attraction for me. The whole unit lives in a 3D-printed enclosure mounted to my back door and runs off a single 10,000mAh bank for about a week.",
-    parts: [
-      { qty: 1, name: "Raspberry Pi Zero W", notes: "Or Zero 2 W for more speed", link: true },
-      { qty: 1, name: "BME280 sensor breakout (I2C)", notes: "Temperature, humidity, pressure", link: true },
-      { qty: 1, name: "Waveshare 2.9\" e-Ink display", notes: "HAT version (attaches directly)", link: true },
-      { qty: 1, name: "10,000mAh USB power bank", notes: "Must support 5V/2A output", link: false },
-      { qty: 4, name: "Female-to-female jumper wires", notes: "For BME280 if not using HAT header", link: false },
-    ],
-    steps: [
-      { title: "Prepare the Pi Zero", text: "Flash Raspberry Pi OS Lite and enable SSH + SPI + I2C in raspi-config. The Pi Zero has a micro-USB power input — use a quality cable and supply that can deliver 2A." },
-      { title: "Attach the e-ink HAT", text: "The Waveshare HAT plugs directly onto the GPIO header. If using a different display, connect via SPI: CLK → GPIO11, MOSI → GPIO10, CS → GPIO8, DC → GPIO25, RST → GPIO17, BUSY → GPIO24." },
-      { title: "Wire the BME280", text: "Connect VCC → 3.3V, GND → GND, SDA → GPIO2, SCL → GPIO3. Run i2cdetect -y 1 to confirm the sensor shows at address 0x76 or 0x77. Some breakouts have an SDO/ADDR pin to select the address." },
-      { title: "Install Python libraries", text: "pip3 install adafruit-circuitpython-bme280 pillow and clone the Waveshare e-Paper library from GitHub into your project directory. The Waveshare library provides the display driver class." },
-      { title: "Schedule with cron", text: "Add a crontab entry to run the display script every 5 minutes: crontab -e, then add */5 * * * * python3 /home/pi/weather/update.py >> /home/pi/weather/update.log 2>&1. Check the log file if the display isn't updating." },
-    ],
-    code: `<span class="code-cmt"># weather.py — BME280 → e-ink display</span>
-
-<span class="code-kw">import</span> board, busio
-<span class="code-kw">import</span> adafruit_bme280.basic <span class="code-kw">as</span> adafruit_bme280
-<span class="code-kw">from</span> PIL <span class="code-kw">import</span> Image, ImageDraw, ImageFont
-<span class="code-kw">from</span> waveshare_epd <span class="code-kw">import</span> epd2in9
-<span class="code-kw">from</span> datetime <span class="code-kw">import</span> datetime
-
-i2c = busio.<span class="code-fn">I2C</span>(board.SCL, board.SDA)
-bme280 = adafruit_bme280.<span class="code-fn">Adafruit_BME280_I2C</span>(i2c)
-bme280.sea_level_pressure = <span class="code-num">1013.25</span>
-
-<span class="code-kw">def</span> <span class="code-fn">get_readings</span>():
-    <span class="code-kw">return</span> {
-        <span class="code-str">"temp"</span>:     <span class="code-fn">round</span>(bme280.temperature, <span class="code-num">1</span>),
-        <span class="code-str">"humidity"</span>: <span class="code-fn">round</span>(bme280.relative_humidity, <span class="code-num">1</span>),
-        <span class="code-str">"pressure"</span>: <span class="code-fn">round</span>(bme280.pressure, <span class="code-num">1</span>),
+    function fmt(s) {
+      if (!s || isNaN(s)) return '0:00';
+      const m   = Math.floor(s / 60);
+      const sec = Math.floor(s % 60).toString().padStart(2, '0');
+      return m + ':' + sec;
     }
 
-<span class="code-kw">def</span> <span class="code-fn">render</span>(data):
-    epd = epd2in9.<span class="code-fn">EPD</span>()
-    epd.<span class="code-fn">init</span>()
-    img  = Image.<span class="code-fn">new</span>(<span class="code-str">"1"</span>, (epd.width, epd.height), <span class="code-num">255</span>)
-    draw = ImageDraw.<span class="code-fn">Draw</span>(img)
-
-    font_lg = ImageFont.<span class="code-fn">truetype</span>(<span class="code-str">"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"</span>, <span class="code-num">36</span>)
-    font_sm = ImageFont.<span class="code-fn">truetype</span>(<span class="code-str">"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"</span>, <span class="code-num">14</span>)
-
-    draw.<span class="code-fn">text</span>((<span class="code-num">10</span>, <span class="code-num">5</span>),  <span class="code-str">f"{data['temp']}°C"</span>,      font=font_lg, fill=<span class="code-num">0</span>)
-    draw.<span class="code-fn">text</span>((<span class="code-num">10</span>, <span class="code-num">55</span>), <span class="code-str">f"Humidity: {data['humidity']}%"</span>,  font=font_sm, fill=<span class="code-num">0</span>)
-    draw.<span class="code-fn">text</span>((<span class="code-num">10</span>, <span class="code-num">75</span>), <span class="code-str">f"Pressure: {data['pressure']} hPa"</span>, font=font_sm, fill=<span class="code-num">0</span>)
-    draw.<span class="code-fn">text</span>((<span class="code-num">10</span>, <span class="code-num">100</span>), datetime.now().<span class="code-fn">strftime</span>(<span class="code-str">"%H:%M · %d %b"</span>), font=font_sm, fill=<span class="code-num">0</span>)
-
-    epd.<span class="code-fn">display</span>(epd.<span class="code-fn">getbuffer</span>(img))
-    epd.<span class="code-fn">sleep</span>()
-
-<span class="code-fn">render</span>(<span class="code-fn">get_readings</span>())`,
-    trouble: [
-      { q: "Display shows nothing or all black/white", badge: "Common", a: "E-ink displays need to be fully initialized and cleared before the first write. Call epd.Clear() before your first display() call. Also check the BUSY pin — the Pi should wait for it to go LOW before sending the next command." },
-      { q: "BME280 temperature reads 3–5°C too high", badge: "Known", a: "The BME280 self-heats slightly, especially on the Pi Zero which runs warm. Either relocate the sensor away from the Pi using a short I2C cable, or apply a software offset constant: temp = bme280.temperature - 3.0" },
-    ]
-  },
-  {
-    id: 5,
-    name: "LED Matrix Scoreboard",
-    date: "Jul 2023",
-    tag: "Arduino",
-    difficulty: "Beginner",
-    description: "MAX7219-driven 8×32 LED matrix displaying live scores fetched over serial from a phone.",
-    overview: "Four chained MAX7219 8×8 LED matrices make a 32×8 display driven by an Arduino Uno. A companion Android app (built with MIT App Inventor) sends score updates over Bluetooth. The Arduino scrolls the text across the display. Great for game nights — I originally built it for foosball but it's been repurposed for everything from ping pong to backyard tournaments.\n\nThe MAX7219 handles all the multiplexing, so the Arduino code is straightforward. The trickiest part is getting the font mapping right for scrolling text.",
-    parts: [
-      { qty: 4, name: "MAX7219 LED matrix module (8×8)", notes: "Get the pre-wired modules with the connector", link: true },
-      { qty: 1, name: "Arduino Uno", notes: "", link: true },
-      { qty: 1, name: "HC-05 Bluetooth module", notes: "Classic Bluetooth, pairs with Android", link: true },
-      { qty: 2, name: "1kΩ resistors", notes: "Voltage divider for HC-05 RX pin", link: false },
-      { qty: 1, name: "2kΩ resistor", notes: "Voltage divider lower leg", link: false },
-      { qty: 1, name: "5V 2A power supply", notes: "Each MAX7219 can draw up to 330mA", link: false },
-    ],
-    steps: [
-      { title: "Chain the MAX7219 modules", text: "The modules daisy-chain: VCC, GND, CLK, and CS are connected in parallel, but DOUT of the first module goes to DIN of the second. All VCC lines connect to your 5V supply. Do not power more than one or two from the Arduino's 5V pin — use an external supply." },
-      { title: "Wire to Arduino SPI pins", text: "CLK → Arduino pin 13, DIN → pin 11, CS → pin 10. Install the MD_Parola and MD_MAX72xx libraries from the Arduino Library Manager. These handle all the display logic." },
-      { title: "Add the HC-05 Bluetooth module", text: "The HC-05 TX goes to Arduino RX (pin 0), and HC-05 RX goes to Arduino TX (pin 1) through a voltage divider (1kΩ + 2kΩ) to drop 5V logic down to 3.3V for the HC-05. Pair the module with your phone at the default PIN '1234' or '0000'." },
-      { title: "Upload and configure", text: "Upload the sketch. The display will scroll a startup message. Open a Bluetooth terminal app on your phone, connect to HC-05, and send a string — it should appear on the display and scroll continuously." },
-    ],
-    code: `<span class="code-cmt">// LED Scoreboard — MAX7219 + HC-05 Bluetooth</span>
-
-<span class="code-kw">#include</span> <span class="code-str">&lt;MD_Parola.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;MD_MAX72xx.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;SPI.h&gt;</span>
-
-<span class="code-kw">#define</span> HARDWARE_TYPE MD_MAX72XX::FC16_HW
-<span class="code-kw">#define</span> MAX_DEVICES   <span class="code-num">4</span>
-<span class="code-kw">#define</span> CS_PIN        <span class="code-num">10</span>
-
-MD_Parola display(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-
-<span class="code-type">String</span> message  = <span class="code-str">"CIRCUITLAB"</span>;
-<span class="code-kw">bool</span>   newMsg   = <span class="code-kw">true</span>;
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  Serial.<span class="code-fn">begin</span>(<span class="code-num">9600</span>);  <span class="code-cmt">// HC-05 default baud</span>
-  display.<span class="code-fn">begin</span>();
-  display.<span class="code-fn">setIntensity</span>(<span class="code-num">4</span>);
-  display.<span class="code-fn">setTextAlignment</span>(PA_LEFT);
-  display.<span class="code-fn">setScrollParameters</span>(<span class="code-num">50</span>, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">if</span> (Serial.<span class="code-fn">available</span>()) {
-    message = Serial.<span class="code-fn">readStringUntil</span>(<span class="code-str">'\n'</span>);
-    message.<span class="code-fn">trim</span>();
-    newMsg = <span class="code-kw">true</span>;
-  }
-
-  <span class="code-kw">if</span> (display.<span class="code-fn">displayAnimate</span>() || newMsg) {
-    display.<span class="code-fn">displayText</span>(message.c_str(), PA_LEFT, <span class="code-num">50</span>, <span class="code-num">1000</span>, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-    newMsg = <span class="code-kw">false</span>;
-  }
-}`,
-    trouble: [
-      { q: "Display flickers or shows random pixels", badge: "Common", a: "This is almost always a power issue. Each MAX7219 can draw up to 330mA at full brightness. Four modules at full brightness need 1.3A — way more than the Arduino's onboard regulator can supply. Use a dedicated 5V 2A supply connected directly to the module VCC lines." },
-      { q: "HC-05 pairs but no data appears", badge: "Tip", a: "Make sure the baud rate in your Bluetooth terminal app matches Serial.begin() in the sketch. HC-05 defaults to 9600. Also check the TX/RX aren't swapped — HC-05 TX → Arduino RX (pin 0), HC-05 RX → Arduino TX (pin 1) through the voltage divider." },
-    ]
-  },
-  {
-    id: 6,
-    name: "Ultrasonic Parking Sensor",
-    date: "May 2023",
-    tag: "Arduino",
-    difficulty: "Beginner",
-    description: "HC-SR04 distance sensor with a LED bar graph and buzzer that beeps faster as you get closer.",
-    overview: "A classic beginner project with a practical outcome. An HC-SR04 ultrasonic sensor measures the distance to whatever is in front of it, and a row of 8 LEDs lights up progressively as an object gets closer. A passive buzzer beeps at increasing frequency when you're within 50cm — just like a car parking sensor.\n\nI mounted mine in my garage to help park without hitting the back wall. The whole thing is wired into a project box and powered from a USB phone charger. Build time was about 90 minutes.",
-    parts: [
-      { qty: 1, name: "Arduino Nano", notes: "Fits neatly in a project box", link: true },
-      { qty: 1, name: "HC-SR04 Ultrasonic Sensor", notes: "", link: true },
-      { qty: 8, name: "LEDs (mix of red/yellow/green)", notes: "3 green, 3 yellow, 2 red", link: false },
-      { qty: 8, name: "220Ω resistors", notes: "One per LED", link: false },
-      { qty: 1, name: "Passive buzzer", notes: "", link: false },
-      { qty: 1, name: "Project enclosure box", notes: "~100×60×25mm", link: false },
-    ],
-    steps: [
-      { title: "Wire the HC-SR04", text: "Connect VCC → 5V, GND → GND, TRIG → D2, ECHO → D3. The sensor works by timing the echo of an ultrasonic pulse. Note: ECHO outputs 5V logic but the HC-SR04 works reliably with Arduino at 5V." },
-      { title: "Wire the LED bar graph", text: "Connect 8 LEDs in a row with 220Ω series resistors to pins D4–D11. Arrange green LEDs for far distances, yellow for mid-range, red for close. The code will light them progressively from left to right as distance decreases." },
-      { title: "Add the buzzer", text: "Connect the buzzer positive pin to D12 and negative to GND. Using tone() with a frequency that increases as distance decreases gives the classic parking sensor effect." },
-      { title: "Mount and test", text: "Upload the sketch, point the sensor at a wall, and slowly approach it. The LEDs should illuminate one by one and the buzzer should speed up. Adjust the MIN_DIST and MAX_DIST constants to suit your space." },
-    ],
-    code: `<span class="code-cmt">// Parking Sensor — HC-SR04 + LED bar + buzzer</span>
-
-<span class="code-kw">const int</span> TRIG_PIN    = <span class="code-num">2</span>;
-<span class="code-kw">const int</span> ECHO_PIN    = <span class="code-num">3</span>;
-<span class="code-kw">const int</span> BUZZER_PIN  = <span class="code-num">12</span>;
-<span class="code-kw">const int</span> LED_PINS[]  = {<span class="code-num">4</span>,<span class="code-num">5</span>,<span class="code-num">6</span>,<span class="code-num">7</span>,<span class="code-num">8</span>,<span class="code-num">9</span>,<span class="code-num">10</span>,<span class="code-num">11</span>};
-<span class="code-kw">const int</span> NUM_LEDS    = <span class="code-num">8</span>;
-
-<span class="code-kw">const int</span> MAX_DIST    = <span class="code-num">200</span>;  <span class="code-cmt">// cm — all LEDs off beyond this</span>
-<span class="code-kw">const int</span> MIN_DIST    = <span class="code-num">10</span>;   <span class="code-cmt">// cm — all LEDs on, alarm</span>
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  <span class="code-fn">pinMode</span>(TRIG_PIN, OUTPUT);
-  <span class="code-fn">pinMode</span>(ECHO_PIN, INPUT);
-  <span class="code-fn">pinMode</span>(BUZZER_PIN, OUTPUT);
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> i = <span class="code-num">0</span>; i &lt; NUM_LEDS; i++)
-    <span class="code-fn">pinMode</span>(LED_PINS[i], OUTPUT);
-}
-
-<span class="code-kw">long</span> <span class="code-fn">getDistance</span>() {
-  <span class="code-fn">digitalWrite</span>(TRIG_PIN, LOW);  <span class="code-fn">delayMicroseconds</span>(<span class="code-num">2</span>);
-  <span class="code-fn">digitalWrite</span>(TRIG_PIN, HIGH); <span class="code-fn">delayMicroseconds</span>(<span class="code-num">10</span>);
-  <span class="code-fn">digitalWrite</span>(TRIG_PIN, LOW);
-  <span class="code-kw">return</span> <span class="code-fn">pulseIn</span>(ECHO_PIN, HIGH) / <span class="code-num">58</span>;
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">long</span> dist = <span class="code-fn">getDistance</span>();
-  dist = <span class="code-fn">constrain</span>(dist, MIN_DIST, MAX_DIST);
-
-  <span class="code-kw">int</span> ledsOn = <span class="code-fn">map</span>(dist, MAX_DIST, MIN_DIST, <span class="code-num">0</span>, NUM_LEDS);
-
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> i = <span class="code-num">0</span>; i &lt; NUM_LEDS; i++)
-    <span class="code-fn">digitalWrite</span>(LED_PINS[i], i &lt; ledsOn ? HIGH : LOW);
-
-  <span class="code-kw">if</span> (dist &lt; <span class="code-num">80</span>) {
-    <span class="code-kw">int</span> freq  = <span class="code-fn">map</span>(dist, <span class="code-num">80</span>, MIN_DIST, <span class="code-num">500</span>, <span class="code-num">3000</span>);
-    <span class="code-fn">tone</span>(BUZZER_PIN, freq, <span class="code-num">50</span>);
-  }
-
-  <span class="code-fn">delay</span>(<span class="code-num">100</span>);
-}`,
-    trouble: [
-      { q: "Distance reading is wildly inaccurate", badge: "Common", a: "The HC-SR04 can give incorrect readings if the TRIG pulse isn't clean. Add a delayMicroseconds(2) LOW pulse before the HIGH pulse as in the example code. Also make sure nothing is within 2cm of the sensor when it first powers up — it needs a clear path for calibration." },
-      { q: "Readings jump erratically", badge: "Tip", a: "Try averaging 3–5 consecutive readings and discarding any that are more than 20cm from the average. This smooths out the occasional spurious echo from the sensor." },
-    ]
-  },
-  {
-    id: 7,
-    name: "Home Automation Controller",
-    date: "Feb 2023",
-    tag: "Raspberry Pi",
-    difficulty: "Advanced",
-    description: "MQTT-based hub controlling smart outlets, sensors, and a relay board from a web dashboard.",
-    overview: "A Raspberry Pi 4 running Mosquitto MQTT broker and a Node.js dashboard serves as the hub for a small home automation network. ESP8266 nodes around the house publish sensor data and subscribe to control topics. A 4-channel relay board connects to the Pi's GPIO for controlling high-voltage devices (via proper isolation and fusing).\n\nThis project took the most iteration of anything I've built. MQTT is elegant once you understand the publish/subscribe pattern, but the wiring and electrical safety for mains-voltage devices requires careful attention. I strongly recommend starting with low-voltage (12V) loads before touching mains.",
-    parts: [
-      { qty: 1, name: "Raspberry Pi 4 (2GB)", notes: "Hub and MQTT broker", link: true },
-      { qty: 1, name: "4-channel relay module (optocoupled)", notes: "Must be optoisolated from Pi GPIO", link: true },
-      { qty: 2, name: "ESP8266 NodeMCU boards", notes: "Wi-Fi sensor nodes", link: true },
-      { qty: 2, name: "DHT22 sensors", notes: "One per ESP8266 node", link: true },
-      { qty: 1, name: "1-gang project enclosure", notes: "For relay board — proper housing is critical", link: false },
-      { qty: 4, name: "20A fuses + fuse holders", notes: "One per relay channel", link: false },
-    ],
-    steps: [
-      { title: "Install Mosquitto on the Pi", text: "sudo apt install mosquitto mosquitto-clients. Enable the service: sudo systemctl enable mosquitto. Edit /etc/mosquitto/mosquitto.conf to add listener 1883 and allow_anonymous true (add auth for production). Test with mosquitto_pub and mosquitto_sub from the command line." },
-      { title: "Wire the relay board to Pi GPIO", text: "SAFETY CRITICAL: Use an optocoupled relay module. Connect IN1–IN4 to Pi GPIO pins 17, 27, 22, 23. VCC to Pi 5V, GND to Pi GND. Verify the JD-VCC jumper: for isolation, remove it and power JD-VCC from a separate 5V supply. NEVER connect relay output terminals to mains without proper enclosure, fusing, and strain relief." },
-      { title: "Flash ESP8266 nodes", text: "Use Arduino IDE with the ESP8266 board package. Install PubSubClient library. Program each NodeMCU with your Wi-Fi credentials and MQTT broker IP. Each node subscribes to a control topic and publishes sensor readings on a schedule." },
-      { title: "Build the Node.js dashboard", text: "npm install express mqtt. The server subscribes to all sensor topics and caches the latest values. A simple HTML/JS frontend polls a /api/state endpoint and sends POST requests to toggle relays. The server publishes to the relay control topic on each POST." },
-    ],
-    code: `<span class="code-cmt">// ESP8266 sensor node — reads DHT22, publishes via MQTT</span>
-
-<span class="code-kw">#include</span> <span class="code-str">&lt;ESP8266WiFi.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;PubSubClient.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;DHT.h&gt;</span>
-
-<span class="code-kw">const char*</span> SSID     = <span class="code-str">"YourNetwork"</span>;
-<span class="code-kw">const char*</span> PASSWORD = <span class="code-str">"YourPassword"</span>;
-<span class="code-kw">const char*</span> BROKER   = <span class="code-str">"192.168.1.100"</span>;
-<span class="code-kw">const char*</span> NODE_ID  = <span class="code-str">"sensor/living-room"</span>;
-
-DHT dht(<span class="code-num">D4</span>, DHT22);
-WiFiClient    wifi;
-PubSubClient  mqtt(wifi);
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  dht.<span class="code-fn">begin</span>();
-  WiFi.<span class="code-fn">begin</span>(SSID, PASSWORD);
-  <span class="code-kw">while</span> (WiFi.status() != WL_CONNECTED) <span class="code-fn">delay</span>(<span class="code-num">500</span>);
-
-  mqtt.<span class="code-fn">setServer</span>(BROKER, <span class="code-num">1883</span>);
-  <span class="code-kw">while</span> (!mqtt.<span class="code-fn">connected</span>())
-    mqtt.<span class="code-fn">connect</span>(NODE_ID);
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  mqtt.<span class="code-fn">loop</span>();
-
-  <span class="code-kw">float</span> t = dht.<span class="code-fn">readTemperature</span>();
-  <span class="code-kw">float</span> h = dht.<span class="code-fn">readHumidity</span>();
-
-  <span class="code-kw">if</span> (!isnan(t)) {
-    <span class="code-type">String</span> payload = <span class="code-str">"{\"temp\":"</span> + <span class="code-type">String</span>(t,<span class="code-num">1</span>) +
-                     <span class="code-str">",\"humidity\":"</span> + <span class="code-type">String</span>(h,<span class="code-num">1</span>) + <span class="code-str">"}"</span>;
-    mqtt.<span class="code-fn">publish</span>(NODE_ID, payload.c_str());
-  }
-
-  <span class="code-fn">delay</span>(<span class="code-num">30000</span>);
-}`,
-    trouble: [
-      { q: "ESP8266 keeps disconnecting from MQTT", badge: "Common", a: "Add a reconnect() function that's called at the start of loop() to re-establish the connection if it drops. Also increase the keepalive interval in PubSubClient (default is 15s — set to 60s with client.setKeepAlive(60)) and make sure your router isn't aggressively dropping idle connections." },
-      { q: "Relay triggers on power-up", badge: "Warning", a: "Many relay modules are active-LOW, meaning a LOW signal from the GPIO triggers the relay. GPIO pins are undefined at boot, causing a brief trigger. Fix this by setting the GPIO pin to OUTPUT and HIGH before WiFi.begin() in setup(), and add a pull-up resistor on the IN pin." },
-    ]
-  },
-  {
-    id: 8,
-    name: "Digital Oscilloscope",
-    date: "Nov 2022",
-    tag: "Arduino",
-    difficulty: "Advanced",
-    description: "A 1–2 kHz bandwidth scope using Arduino's ADC and a 1.8\" TFT display for signal visualization.",
-    overview: "This is more of an educational project than a replacement for a real oscilloscope, but it's genuinely useful for debugging low-frequency signals like PWM outputs, audio envelopes, and slow sensor waveforms. The Arduino's ADC runs at its maximum rate (~9600 samples/second), and the 1.8\" TFT displays the waveform in real time with adjustable time/div and voltage scaling.\n\nAt maximum ADC speed you get about 4.8kHz bandwidth, which is enough for anything running slower than that. I use it constantly to debug I2C timing issues and check PWM duty cycles. The whole build fits in a 3D-printed handheld enclosure.",
-    parts: [
-      { qty: 1, name: "Arduino Uno or Nano", notes: "", link: true },
-      { qty: 1, name: "1.8\" TFT display (ST7735)", notes: "128×160 pixel, SPI", link: true },
-      { qty: 2, name: "10kΩ potentiometers", notes: "Time/div and voltage controls", link: false },
-      { qty: 1, name: "10:1 Probe divider resistors", notes: "9MΩ + 1MΩ for 10× attenuation", link: false },
-      { qty: 1, name: "3.5mm input jack", notes: "For probe connection", link: false },
-      { qty: 1, name: "9V battery + barrel jack", notes: "Portable power", link: false },
-    ],
-    steps: [
-      { title: "Wire the TFT display", text: "Connect over SPI: CS → pin 10, RST → pin 9, DC → pin 8, MOSI → pin 11, CLK → pin 13. Install the Adafruit ST7735 and Adafruit GFX libraries. Run the library test sketch first to confirm the display works before adding scope logic." },
-      { title: "Build the input stage", text: "SAFETY: only use this scope on signals under 5V. For higher voltages, build a 10:1 voltage divider with a 9MΩ resistor in series with the input and 1MΩ to ground. Connect the divider output to Arduino A0. Add a 5.1V zener diode from A0 to GND as over-voltage protection." },
-      { title: "Add the controls", text: "Wire two 10kΩ potentiometers to A1 (time/div) and A2 (trigger level). Reading these ADC values in software lets you adjust the display in real time without reflashing." },
-      { title: "Calibrate the display", text: "To calibrate, feed in a known signal (the Arduino's built-in 490Hz PWM from pin 5 works well). Adjust the time/div pot until you see 1–2 complete cycles. Mark those pot positions and create a lookup table for the time/div scale factor in the code." },
-    ],
-    code: `<span class="code-cmt">// Digital Oscilloscope — Arduino ADC → ST7735 TFT</span>
-
-<span class="code-kw">#include</span> <span class="code-str">&lt;Adafruit_GFX.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;Adafruit_ST7735.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;SPI.h&gt;</span>
-
-<span class="code-kw">#define</span> TFT_CS   <span class="code-num">10</span>
-<span class="code-kw">#define</span> TFT_RST  <span class="code-num">9</span>
-<span class="code-kw">#define</span> TFT_DC   <span class="code-num">8</span>
-<span class="code-kw">#define</span> SCREEN_W <span class="code-num">128</span>
-<span class="code-kw">#define</span> SCREEN_H <span class="code-num">160</span>
-
-Adafruit_ST7735 tft(TFT_CS, TFT_DC, TFT_RST);
-
-<span class="code-kw">int</span> samples[SCREEN_W];
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  tft.<span class="code-fn">initR</span>(INITR_BLACKTAB);
-  tft.<span class="code-fn">fillScreen</span>(ST77XX_BLACK);
-
-  <span class="code-cmt">// Max ADC speed: disable prescaler to 16 (default 128)</span>
-  ADCSRA = (ADCSRA &amp; ~0x07) | <span class="code-num">0x04</span>;  <span class="code-cmt">// prescaler = 16</span>
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">int</span> trigger = <span class="code-fn">map</span>(<span class="code-fn">analogRead</span>(A2), <span class="code-num">0</span>, <span class="code-num">1023</span>, <span class="code-num">0</span>, SCREEN_H);
-
-  <span class="code-cmt">// Wait for trigger</span>
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> i = <span class="code-num">0</span>; i &lt; <span class="code-num">500</span>; i++) {
-    <span class="code-kw">if</span> (<span class="code-fn">map</span>(<span class="code-fn">analogRead</span>(A0), <span class="code-num">0</span>, <span class="code-num">1023</span>, <span class="code-num">0</span>, SCREEN_H) >= trigger) <span class="code-kw">break</span>;
-  }
-
-  <span class="code-cmt">// Capture samples</span>
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> i = <span class="code-num">0</span>; i &lt; SCREEN_W; i++)
-    samples[i] = <span class="code-fn">map</span>(<span class="code-fn">analogRead</span>(A0), <span class="code-num">0</span>, <span class="code-num">1023</span>, SCREEN_H, <span class="code-num">0</span>);
-
-  <span class="code-cmt">// Render waveform</span>
-  tft.<span class="code-fn">fillScreen</span>(ST77XX_BLACK);
-  <span class="code-fn">drawGrid</span>();
-
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> i = <span class="code-num">1</span>; i &lt; SCREEN_W; i++)
-    tft.<span class="code-fn">drawLine</span>(i-<span class="code-num">1</span>, samples[i-<span class="code-num">1</span>], i, samples[i], ST77XX_GREEN);
-}
-
-<span class="code-type">void</span> <span class="code-fn">drawGrid</span>() {
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> x = <span class="code-num">0</span>; x &lt; SCREEN_W; x += <span class="code-num">32</span>)
-    tft.<span class="code-fn">drawFastVLine</span>(x, <span class="code-num">0</span>, SCREEN_H, <span class="code-num">0x1082</span>);
-  <span class="code-kw">for</span> (<span class="code-kw">int</span> y = <span class="code-num">0</span>; y &lt; SCREEN_H; y += <span class="code-num">32</span>)
-    tft.<span class="code-fn">drawFastHLine</span>(<span class="code-num">0</span>, y, SCREEN_W, <span class="code-num">0x1082</span>);
-}`,
-    trouble: [
-      { q: "Waveform is all noise or flat line", badge: "Common", a: "Check that the probe tip (A0) has no direct path to ground. Also make sure you're not measuring a floating (unconnected) input — the ADC will pick up all kinds of noise from a floating pin. Try touching the probe tip with your finger first to see a 50Hz hum from mains interference." },
-      { q: "Display flickers during capture", badge: "Known", a: "Because we're calling fillScreen() every frame, there will be some flicker. Fix this by double-buffering: draw to an off-screen array and only send changed pixels to the TFT. This is a more advanced optimization but makes a huge difference to refresh smoothness." },
-    ]
-  },
-  {
-    id: 9,
-    name: "GPS Tracker & Logger",
-    date: "Aug 2022",
-    tag: "Arduino",
-    difficulty: "Intermediate",
-    description: "Neo-6M GPS module logging coordinates to an SD card with speed and heading data.",
-    overview: "A Neo-6M GPS module feeds NMEA sentences to an Arduino Mega, which parses them using the TinyGPS++ library and writes the coordinates, speed, and heading to a CSV file on a microSD card. The logged data can be imported directly into Google Earth or GPS Visualizer to see the recorded route.\n\nI originally built this to log bike rides. With a fresh fix in open sky, position accuracy is within 3 meters. The logging rate is 1Hz (once per second), which is more than enough for anything moving at human speeds. Battery life on a 1000mAh LiPo is about 8 hours.",
-    parts: [
-      { qty: 1, name: "Arduino Mega 2560", notes: "Needs multiple hardware serial ports", link: true },
-      { qty: 1, name: "Neo-6M GPS module", notes: "With ceramic patch antenna", link: true },
-      { qty: 1, name: "MicroSD card module", notes: "SPI interface", link: true },
-      { qty: 1, name: "MicroSD card 8GB+", notes: "FAT32 formatted", link: false },
-      { qty: 1, name: "1000mAh LiPo battery", notes: "", link: false },
-      { qty: 1, name: "TP4056 LiPo charger module", notes: "With protection circuit", link: false },
-    ],
-    steps: [
-      { title: "Wire the GPS module", text: "Connect the Neo-6M TX to Arduino Mega Serial1 RX (pin 19), and GND to GND. The module runs at 3.3V logic but the 5V power input is regulated onboard. Leave the module's TX connected directly to the Mega — the Mega's serial pins are 5V tolerant on input. VCC → 5V." },
-      { title: "Wire the SD card module", text: "Connect over SPI: CS → pin 53 (Mega SPI CS), MOSI → 51, MISO → 50, CLK → 52. VCC → 5V, GND → GND. Format your SD card as FAT32. Install the SD library (built into Arduino IDE)." },
-      { title: "Install TinyGPS++", text: "Install TinyGPS++ from the Arduino Library Manager. This library parses NMEA sentences from the GPS module and exposes clean methods like gps.location.lat() and gps.speed.kmph()." },
-      { title: "Wait for first fix", text: "On first power-up outdoors, the Neo-6M can take 30–90 seconds to acquire a fix (cold start). Subsequent starts (warm/hot) are much faster. The module's blue LED blinks once per second when it has a valid fix." },
-      { title: "Test the CSV output", text: "After a ride, remove the SD card, open the CSV in Excel or Google Sheets, and copy the lat/lon columns into GPS Visualizer (www.gpsvisualizer.com) to see your route on a map. The format is compatible with Google Earth's KML import too." },
-    ],
-    code: `<span class="code-cmt">// GPS Logger — Neo-6M + SD card, outputs CSV</span>
-
-<span class="code-kw">#include</span> <span class="code-str">&lt;TinyGPS++.h&gt;</span>
-<span class="code-kw">#include</span> <span class="code-str">&lt;SD.h&gt;</span>
-
-<span class="code-kw">#define</span> GPS_SERIAL  Serial1
-<span class="code-kw">#define</span> SD_CS_PIN   <span class="code-num">53</span>
-<span class="code-kw">#define</span> LOG_FILE    <span class="code-str">"track.csv"</span>
-
-TinyGPSPlus gps;
-File        logFile;
-
-<span class="code-type">void</span> <span class="code-fn">setup</span>() {
-  Serial.<span class="code-fn">begin</span>(<span class="code-num">115200</span>);
-  GPS_SERIAL.<span class="code-fn">begin</span>(<span class="code-num">9600</span>);
-
-  <span class="code-kw">if</span> (!SD.<span class="code-fn">begin</span>(SD_CS_PIN)) {
-    Serial.<span class="code-fn">println</span>(<span class="code-str">"SD init failed!"</span>);
-    <span class="code-kw">while</span> (<span class="code-num">1</span>);
-  }
-
-  logFile = SD.<span class="code-fn">open</span>(LOG_FILE, FILE_WRITE);
-  logFile.<span class="code-fn">println</span>(<span class="code-str">"time,lat,lon,speed_kmh,heading,satellites"</span>);
-  logFile.<span class="code-fn">close</span>();
-}
-
-<span class="code-type">void</span> <span class="code-fn">loop</span>() {
-  <span class="code-kw">while</span> (GPS_SERIAL.<span class="code-fn">available</span>())
-    gps.<span class="code-fn">encode</span>(GPS_SERIAL.<span class="code-fn">read</span>());
-
-  <span class="code-kw">if</span> (gps.location.<span class="code-fn">isUpdated</span>() &amp;&amp; gps.location.<span class="code-fn">isValid</span>()) {
-    logFile = SD.<span class="code-fn">open</span>(LOG_FILE, FILE_WRITE);
-
-    logFile.<span class="code-fn">print</span>(gps.time.<span class="code-fn">hour</span>()); logFile.<span class="code-fn">print</span>(<span class="code-str">":"</span>);
-    logFile.<span class="code-fn">print</span>(gps.time.<span class="code-fn">minute</span>()); logFile.<span class="code-fn">print</span>(<span class="code-str">","</span>);
-    logFile.<span class="code-fn">print</span>(gps.location.<span class="code-fn">lat</span>(), <span class="code-num">6</span>); logFile.<span class="code-fn">print</span>(<span class="code-str">","</span>);
-    logFile.<span class="code-fn">print</span>(gps.location.<span class="code-fn">lng</span>(), <span class="code-num">6</span>); logFile.<span class="code-fn">print</span>(<span class="code-str">","</span>);
-    logFile.<span class="code-fn">print</span>(gps.speed.<span class="code-fn">kmph</span>(), <span class="code-num">1</span>); logFile.<span class="code-fn">print</span>(<span class="code-str">","</span>);
-    logFile.<span class="code-fn">print</span>(gps.course.<span class="code-fn">deg</span>(), <span class="code-num">1</span>); logFile.<span class="code-fn">print</span>(<span class="code-str">","</span>);
-    logFile.<span class="code-fn">println</span>(gps.satellites.<span class="code-fn">value</span>());
-
-    logFile.<span class="code-fn">close</span>();
-  }
-}`,
-    trouble: [
-      { q: "GPS never gets a fix indoors", badge: "Expected", a: "GPS signals can't penetrate buildings well. Take the module outside with a clear view of the sky. Near windows sometimes works but is unreliable. The cold start (no almanac data) takes longer — subsequent power-ups with valid almanac in memory are much faster." },
-      { q: "SD card writes are slow or corrupt", badge: "Tip", a: "Always close() the file after each write — do not leave it open between log entries. If power is cut with an open file, the FAT directory entry won't be updated and data is lost. Closing after every write is slower but much safer for a portable logger." },
-    ]
-  }
-];
-
-// ─── ROUTING ──────────────────────────────────────────────────────────────────
-function showPage(page, projectId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-
-  if (page === 'home') {
-    document.getElementById('page-home').classList.add('active');
-    document.getElementById('nav-home').classList.add('active');
-    window.scrollTo(0, 0);
-  } else if (page === 'projects') {
-    document.getElementById('page-projects').classList.add('active');
-    document.getElementById('nav-projects').classList.add('active');
-    document.getElementById('search-input').value = '';
-    filterProjects('');
-    window.scrollTo(0, 0);
-  } else if (page === 'about') {
-    document.getElementById('page-about').classList.add('active');
-    document.getElementById('nav-about').classList.add('active');
-    window.scrollTo(0, 0);
-  } else if (page === 'project') {
-    document.getElementById('page-project').classList.add('active');
-    document.getElementById('nav-projects').classList.add('active');
-    loadProject(projectId);
-    window.scrollTo(0, 0);
-  }
-}
-
-// ─── PROJECTS GRID ────────────────────────────────────────────────────────────
-function buildProjectsGrid() {
-  const grid = document.getElementById('projects-grid');
-  grid.innerHTML = PROJECTS.map(p => `
-    <div class="project-card" onclick="showPage('project', ${p.id})" data-name="${p.name.toLowerCase()}" data-tag="${p.tag.toLowerCase()}">
-      <div class="project-img">
-        ${pcbSVG()}
-        <div class="project-img-overlay"></div>
-        <div class="project-tag">${p.tag}</div>
-      </div>
-      <div class="project-body">
-        <div class="project-date">${p.date}</div>
-        <div class="project-name">${p.name}</div>
-        <div class="project-desc">${p.description}</div>
-      </div>
-      <div class="project-arrow">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </div>
-    </div>
-  `).join('');
-}
-
-function pcbSVG() {
-  return `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="10" width="60" height="60" rx="4" stroke="#9aa3b5" stroke-width="1.5"/>
-    <rect x="20" y="20" width="18" height="12" rx="1" stroke="#9aa3b5" stroke-width="1"/>
-    <rect x="42" y="20" width="18" height="12" rx="1" stroke="#9aa3b5" stroke-width="1"/>
-    <rect x="20" y="48" width="40" height="12" rx="1" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="29" y1="32" x2="29" y2="48" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="51" y1="32" x2="51" y2="42" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="51" y1="42" x2="60" y2="42" stroke="#9aa3b5" stroke-width="1"/>
-    <circle cx="29" cy="36" r="2" stroke="#9aa3b5" stroke-width="1"/>
-    <circle cx="51" cy="40" r="2" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="10" y1="25" x2="5" y2="25" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="10" y1="35" x2="5" y2="35" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="70" y1="25" x2="75" y2="25" stroke="#9aa3b5" stroke-width="1"/>
-    <line x1="70" y1="35" x2="75" y2="35" stroke="#9aa3b5" stroke-width="1"/>
-  </svg>`;
-}
-
-function filterProjects(query) {
-  const q = query.toLowerCase().trim();
-  const cards = document.querySelectorAll('.project-card');
-  let visible = 0;
-  cards.forEach(card => {
-    const match = !q || card.dataset.name.includes(q) || card.dataset.tag.includes(q);
-    card.style.display = match ? '' : 'none';
-    if (match) visible++;
-  });
-  document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
-}
-
-// ─── PROJECT DETAIL ───────────────────────────────────────────────────────────
-function loadProject(id) {
-  const p = PROJECTS.find(x => x.id === id);
-  if (!p) return;
-
-  document.getElementById('detail-tag').textContent = `// ${p.tag.toLowerCase()}`;
-  document.getElementById('detail-title').textContent = p.name;
-  document.getElementById('detail-date').textContent = p.date;
-  document.getElementById('detail-difficulty').textContent = p.difficulty;
-
-  // Overview
-  document.getElementById('detail-overview').textContent = p.overview;
-
-  // Parts
-  const tbody = document.getElementById('parts-tbody');
-  tbody.innerHTML = p.parts.map(part => `
-    <tr>
-      <td class="part-qty">×${part.qty}</td>
-      <td>${part.name}</td>
-      <td style="color:var(--text-muted)">${part.notes}</td>
-      <td>${part.link ? `<span class="part-link">Buy ↗</span>` : '—'}</td>
-    </tr>
-  `).join('');
-
-  // Steps
-  document.getElementById('detail-steps').innerHTML = p.steps.map((step, i) => `
-    <div class="step-item">
-      <div class="step-num-circle">${String(i+1).padStart(2,'0')}</div>
-      <div class="step-content">
-        <div class="step-title">${step.title}</div>
-        <div class="step-text">${step.text}</div>
-      </div>
-    </div>
-  `).join('');
-
-  // Code
-  document.getElementById('detail-code').innerHTML = `
-    <div class="code-block">
-      <div class="code-header">
-        <span class="code-lang">${p.tag === 'Arduino' ? 'C / Arduino' : 'Python'}</span>
-        <button class="code-copy" onclick="copyCode(this)">Copy</button>
-      </div>
-      <pre class="code-pre">${p.code}</pre>
-    </div>
-  `;
-
-  // Troubleshooting
-  document.getElementById('detail-trouble').innerHTML = p.trouble.map((item, i) => `
-    <div class="trouble-item" id="trouble-${id}-${i}">
-      <div class="trouble-q" onclick="toggleTrouble('trouble-${id}-${i}')">
-        <div class="trouble-q-text">
-          <span class="trouble-badge">${item.badge}</span>
-          ${item.q}
-        </div>
-        <svg class="trouble-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </div>
-      <div class="trouble-ans">${item.a}</div>
-    </div>
-  `).join('');
-}
-
-function toggleTrouble(id) {
-  document.getElementById(id).classList.toggle('open');
-}
-
-function copyCode(btn) {
-  const pre = btn.closest('.code-block').querySelector('.code-pre');
-  const text = pre.innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
-  });
-}
-
-// Section nav scroll highlighting
-function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: 'smooth' });
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-buildProjectsGrid();
-</script>
+    function resetCard(card) {
+      card.querySelector('.play-btn').innerHTML   = PLAY_ICON;
+      card.querySelector('.progress-fill').style.width = '0%';
+      card.querySelector('.progress-thumb').style.left  = '0%';
+      card.querySelector('.cur').textContent      = '0:00';
+      card.classList.remove('playing');
+    }
+
+    document.querySelectorAll('.song-card').forEach(card => {
+      const audio       = card.querySelector('audio');
+      const btn         = card.querySelector('.play-btn');
+      const fill        = card.querySelector('.progress-fill');
+      const thumb       = card.querySelector('.progress-thumb');
+      const curEl       = card.querySelector('.cur');
+      const totEl       = card.querySelector('.tot');
+      const durEl       = card.querySelector('.track-dur');
+      const progressWrap = card.querySelector('.progress-wrap');
+
+      audio.addEventListener('loadedmetadata', () => {
+        const d = fmt(audio.duration);
+        totEl.textContent = d;
+        durEl.textContent = d;
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+        fill.style.width  = pct + '%';
+        thumb.style.left  = pct + '%';
+        curEl.textContent = fmt(audio.currentTime);
+      });
+
+      audio.addEventListener('ended', () => {
+        resetCard(card);
+        currentAudio = null;
+        currentCard  = null;
+      });
+
+      btn.addEventListener('click', () => {
+        const isThisCard = currentAudio === audio;
+
+        // stop whatever is playing
+        if (currentAudio && !isThisCard) {
+          currentAudio.pause();
+          resetCard(currentCard);
+        }
+
+        if (audio.paused) {
+          audio.play().catch(() => {});
+          btn.innerHTML = PAUSE_ICON;
+          card.classList.add('playing');
+          currentAudio = audio;
+          currentCard  = card;
+        } else {
+          audio.pause();
+          btn.innerHTML = PLAY_ICON;
+          card.classList.remove('playing');
+          currentAudio = null;
+          currentCard  = null;
+        }
+      });
+
+      progressWrap.addEventListener('click', e => {
+        const rect = progressWrap.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        if (audio.duration) audio.currentTime = pct * audio.duration;
+      });
+    });
+  </script>
 </body>
 </html>
