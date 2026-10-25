@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CIRCUIT LAB</title>
+<link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
@@ -257,6 +260,83 @@
   .hero-title em {
     font-style: normal;
     color: var(--blue-light);
+  }
+
+  .hero-title { position: relative; }
+
+  /* Second line starts exactly under "Builds": 2.593em is the width of "Small "
+     in Outfit 600. em units keep it lined up at every headline size. */
+  .hero-title .indent {
+    display: inline-block;
+    margin-left: 2.593em;
+  }
+
+  /* PCB trace filling the gap under "Small" (drawn in em units, so it scales too) */
+  .hero-trace {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2.5em;
+    height: 2.0em;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .trace-line {
+    fill: none;
+    stroke: var(--blue-light);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* 250 is just over the path's real length (~247), so one dash covers it all */
+    stroke-dasharray: 250;
+    stroke-dashoffset: 0;
+  }
+
+  .trace-via {
+    fill: white;
+    stroke: var(--blue-light);
+    stroke-width: 5;
+  }
+
+  .trace-pad { fill: var(--blue-light); }
+
+  .trace-glow {
+    fill: var(--blue-light);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* On load: via appears, trace draws in, pad lights up as the "signal" arrives.
+     Without animation (reduced motion) the finished trace simply shows. */
+  .trace-via  { animation: trace-fade 0.3s ease-out 0.3s both; }
+  .trace-line { animation: trace-draw 0.9s cubic-bezier(0.6, 0, 0.3, 1) 0.5s both; }
+  .trace-pad  { animation: trace-fade 0.2s ease-out 1.35s both; }
+  .trace-glow { animation: trace-ping 0.8s ease-out 1.4s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .trace-via, .trace-line, .trace-pad, .trace-glow { animation: none; }
+  }
+
+  @keyframes trace-draw {
+    from { stroke-dashoffset: 250; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  @keyframes trace-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes trace-ping {
+    0%   { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 0;   transform: scale(3); }
+  }
+
+  /* Very narrow phones: shrink the headline a bit so "Big Ideas." still fits on one line */
+  @media (max-width: 370px) {
+    .hero-title { font-size: 36px; }
   }
 
   .hero-subtitle {
@@ -1470,7 +1550,13 @@
   <section class="home-hero">
     <div class="hero-content">
       <div class="hero-eyebrow">Arduino &amp; Raspberry Pi Projects</div>
-      <h1 class="hero-title">Building things<br>that <em>actually work</em></h1>
+      <h1 class="hero-title">Small Builds,<br><em class="indent">Big Ideas.</em><svg class="hero-trace" viewBox="0 0 260 170" aria-hidden="true">
+        <!-- PCB trace: via under the "S", 45° bend, pad just before "Big" (units: 1/100 em) -->
+        <path class="trace-line" d="M27 106 L27 140 L45 158 L232 158"/>
+        <circle class="trace-via" cx="27" cy="106" r="7"/>
+        <circle class="trace-glow" cx="240" cy="158" r="8"/>
+        <circle class="trace-pad" cx="240" cy="158" r="8"/>
+      </svg></h1>
       <p class="hero-subtitle">A collection of microcontroller projects from first prototype to finished build. Wiring diagrams, code, parts lists, and everything in between.</p>
       <button class="hero-cta" onclick="showPage('projects')">
         Browse Projects
