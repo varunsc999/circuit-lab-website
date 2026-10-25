@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Tab-sized version of the nav chip logo: thicker lines so it reads at 16px -->
+  <rect width="64" height="64" rx="14" fill="#0f2044"/>
+  <g stroke="#ffffff" stroke-width="3.5" stroke-linecap="round">
+    <!-- pins -->
+    <line x1="26" y1="17" x2="26" y2="10"/>
+    <line x1="38" y1="17" x2="38" y2="10"/>
+    <line x1="26" y1="47" x2="26" y2="54"/>
+    <line x1="38" y1="47" x2="38" y2="54"/>
+    <line x1="17" y1="26" x2="10" y2="26"/>
+    <line x1="17" y1="38" x2="10" y2="38"/>
+    <line x1="47" y1="26" x2="54" y2="26"/>
+    <line x1="47" y1="38" x2="54" y2="38"/>
+    <!-- chip body -->
+    <rect x="17" y="17" width="30" height="30" rx="4" fill="#1a3460"/>
+  </g>
+  <!-- core -->
+  <rect x="25" y="25" width="14" height="14" rx="2.5" fill="#3a74cc"/>
+</svg>
